@@ -1,0 +1,62 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Retailer Model - Represents online stores/domains
+model Retailer {
+  id      String   @id @default(uuid()) @db.Uuid
+  domain  String   @unique
+  name    String
+  logoUrl String?
+  homeUrl String?
+  isActive Boolean @default(true)
+
+  // Smart DOM Metadata (Crucial for a Framework)
+  // Instead of hardcoding selectors in JS, store them here.
+  // Example: { "input": "#promo-code", "submit": ".btn-apply" }
+  selectorConfig Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  coupons Coupon[]
+
+  @@index([domain])
+  @@map("retailers")
+}
+
+// Coupon Model - Represents individual coupon codes
+model Coupon {
+  id           String   @id @default(uuid()) @db.Uuid
+  code         String
+  description  String
+  successCount Int      @default(0)
+  failureCount Int      @default(0)
+
+  // Helps prioritize "fresh" coupons
+  lastSuccessAt DateTime?
+  // Helps prune "stale" coupons
+  lastTestedAt  DateTime?
+  // If the source provided an expiry
+  expiryDate    DateTime?
+  // e.g., "user-submission", "scraper-v1", "admin"
+  source        String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  retailerId String   @db.Uuid
+  retailer   Retailer @relation(fields: [retailerId], references: [id], onDelete: Cascade)
+
+  @@unique([retailerId, code])
+  @@index([retailerId])
+  @@map("coupons")
+}

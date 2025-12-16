@@ -66,15 +66,42 @@ The project is architected as a **Monorepo** containing two main services: `exte
 **Goal:** Create the REST API to serve coupon data to the extension.
 
 ### Story 2.1: Database Schema (Prisma)
-* **Description:** specific data models for `Retailer` and `Coupon`.
+* **Description:** Define data models for `Retailer` and `Coupon` with enhanced fields for smart coupon management.
 * **AI Instructions:**
     * Install `prisma` and `@prisma/client` in `server`. Initialize with `npx prisma init`.
-    * Define Model `Retailer`: `id` (UUID), `domain` (String, unique, indexed), `name` (String).
-    * Define Model `Coupon`: `id` (UUID), `code` (String), `description` (String), `successCount` (Int), `failureCount` (Int), `retailerId` (Relation to Retailer).
-    * Run migration: `npx prisma migrate dev --name init`.
+    * Define Model `Retailer`:
+        * `id` (UUID, primary key)
+        * `domain` (String, unique, indexed)
+        * `name` (String)
+        * `logoUrl` (String?, optional) - For displaying in Extension Popup
+        * `homeUrl` (String?, optional) - Direct link to the store
+        * `isActive` (Boolean, default: true) - Active status flag
+        * `selectorConfig` (Json?, optional) - Smart DOM metadata for CSS selectors (e.g., `{ "input": "#promo-code", "submit": ".btn-apply" }`)
+        * `createdAt` (DateTime, default: now())
+        * `updatedAt` (DateTime, auto-updated)
+        * Relation: One-to-many with `Coupon`
+    * Define Model `Coupon`:
+        * `id` (UUID, primary key)
+        * `code` (String)
+        * `description` (String)
+        * `successCount` (Int, default: 0)
+        * `failureCount` (Int, default: 0)
+        * `lastSuccessAt` (DateTime?, optional) - Helps prioritize "fresh" coupons
+        * `lastTestedAt` (DateTime?, optional) - Helps prune "stale" coupons
+        * `expiryDate` (DateTime?, optional) - If the source provided an expiry
+        * `source` (String?, optional) - e.g., "user-submission", "scraper-v1", "admin"
+        * `createdAt` (DateTime, default: now())
+        * `updatedAt` (DateTime, auto-updated)
+        * `retailerId` (UUID, foreign key to Retailer with CASCADE delete)
+        * Unique constraint: `@@unique([retailerId, code])` - Prevents duplicate coupons per retailer
+        * Index: `@@index([retailerId])`
+    * Run migrations: `npx prisma migrate dev --name init` and `npx prisma migrate dev --name add_enhanced_fields`.
+    * Generate Prisma Client: `npx prisma generate`.
 * **Acceptance Criteria:**
     * `schema.prisma` file exists and is valid.
-    * Tables created in Docker Postgres instance.
+    * Tables created in Docker Postgres instance with all enhanced fields.
+    * Unique constraint ensures no duplicate coupon codes per retailer.
+    * Prisma Client generated with updated types.
 
 ### Story 2.2: Coupon Lookup Endpoint
 * **Description:** Create a GET endpoint that accepts a domain URL and returns valid coupons.
