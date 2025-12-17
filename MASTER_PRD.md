@@ -108,12 +108,12 @@ The project is architected as a **Monorepo** containing two main services: `exte
 * **AI Instructions:**
     * Create route `GET /api/v1/coupons`.
     * Input: Query param `?domain=example.com`.
-    * Logic: Extract hostname. Query `Retailer` table by domain. Return associated `Coupon` list ordered by `successCount` DESC.
+    * Logic: Extract hostname. Query `Retailer` table by domain. Return associated `Coupon` list ordered by `successCount` DESC. Use `lastSuccessAt` to prioritize fresh coupons.
     * Response Type: `JSON { data: Coupon[] }`.
     * Error Handling: Return 404 if retailer not found.
 * **Testing:**
     * Unit Test: Mock Prisma response, verify controller logic.
-    * Integration Test: Seed DB with "nike.com", hit endpoint, verify JSON response.
+    * Integration Test: Seed DB with 3 random non-existent retailer data and 10 coupons each, hit endpoint, verify JSON response.
 
 ---
 

@@ -4,15 +4,16 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "ts-node src/index.ts",
+    "dev": "ts-node --esm src/index.ts",
     "build": "tsc",
     "lint": "eslint src/**/*.ts",
-    "lint:fix": "eslint src/**/*.ts --fix"
+    "lint:fix": "eslint src/**/*.ts --fix",
+    "seed": "ts-node --esm prisma/seed.ts"
   },
   "keywords": [],
   "author": "Evgenii Klepilin",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",
     "@eslint/js": "^9.39.2",
@@ -35,5 +36,9 @@
     "hooks": {
       "pre-commit": "npm run lint"
     }
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.2.0",
+    "pg": "^8.16.3"
   }
 }
