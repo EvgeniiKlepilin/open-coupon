@@ -122,16 +122,35 @@ The project is architected as a **Monorepo** containing two main services: `exte
 **Goal:** The user interface users see when clicking the extension icon.
 
 ### Story 3.1: Manifest V3 Configuration
-* **Description:** Configure the core extension manifest.
-* **AI Instructions:**
-    * Create `client/manifest.json`.
-    * Set `manifest_version: 3`.
-    * Permissions: `activeTab`, `storage`, `scripting`.
-    * Host Permissions: `*://*/*` (or specific API URL).
-    * Action: Set `default_popup` to `index.html`.
-    * Background: Set `service_worker` to the build output file.
+* **Description:** Initialize the extension client using CRXJS framework.
+* **Implementation:**
+    * Extension initialized with `npx create-crxjs` command.
+    * Uses `@crxjs/vite-plugin` for building Manifest V3 extensions with Vite.
+    * Project structure created:
+        * `manifest.config.ts` - Dynamic manifest configuration using `defineManifest`.
+        * `src/popup/` - Popup UI entry point (index.html + main.tsx + App.tsx).
+        * `src/sidepanel/` - Side panel UI entry point (index.html + main.tsx + App.tsx).
+        * `src/content/` - Content scripts entry point (main.tsx).
+        * `src/components/` - Shared React components.
+        * `public/` - Static assets (logo.png).
+    * Build configuration:
+        * `vite.config.ts` includes crx plugin and zip packaging plugin.
+        * TypeScript with strict mode and Chrome types (`@types/chrome`).
+        * Path aliases configured (`@/*` -> `src/*`).
+        * React 19 with TypeScript 5.8.
+    * Current manifest configuration:
+        * `manifest_version: 3`
+        * Permissions: `sidePanel`, `contentSettings`
+        * Content scripts: Matches `https://*/*`
+        * Action: default_popup at `src/popup/index.html`
+        * Side panel: default_path at `src/sidepanel/index.html`
+* **Next Steps:**
+    * Update manifest permissions to include `activeTab`, `storage`, `scripting` for coupon functionality.
+    * Add host permissions for API endpoint access.
 * **Acceptance Criteria:**
-    * Build generates a folder loadable in Chrome `chrome://extensions`.
+    * ✅ `npm run dev` starts development server.
+    * ✅ `npm run build` generates dist folder loadable in Chrome `chrome://extensions`.
+    * ✅ Extension includes popup, sidepanel, and content script entry points.
 
 ### Story 3.2: Popup UI - Coupon List
 * **Description:** A React component that fetches and displays coupons for the current tab.
