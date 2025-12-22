@@ -153,15 +153,80 @@ The project is architected as a **Monorepo** containing two main services: `exte
     * ✅ Extension includes popup, sidepanel, and content script entry points.
 
 ### Story 3.2: Popup UI - Coupon List
-* **Description:** A React component that fetches and displays coupons for the current tab.
-* **AI Instructions:**
-    * Use `chrome.tabs.query` to get current active tab URL.
-    * Fetch `http://localhost:3000/api/v1/coupons?domain={currentUrl}`.
-    * Render a list of coupons.
-    * Component: `CouponCard` (displays Code, Success Rate, "Copy" button).
-    * Styling: Use Tailwind for a clean card layout.
+* **Description:** Build a React-based popup interface that fetches and displays available coupons for the current tab's domain.
+* **Implementation Requirements:**
+    * **Active Tab Detection:**
+        * Use `chrome.tabs.query({ active: true, currentWindow: true })` to get current tab URL.
+        * Extract hostname from the URL for API queries.
+        * Handle edge cases: new tab, chrome:// URLs, local files.
+    * **API Integration:**
+        * Endpoint: `http://localhost:3030/api/v1/coupons?domain={hostname}`
+        * Use `fetch` with proper error handling and timeout.
+        * Implement retry logic for failed requests (max 3 attempts).
+    * **TypeScript Interfaces:**
+        * Define `Coupon` interface matching backend schema:
+            ```typescript
+            interface Coupon {
+              id: string;
+              code: string;
+              description: string;
+              successCount: number;
+              failureCount: number;
+              lastSuccessAt?: string;
+              expiryDate?: string;
+            }
+            ```
+        * Define `Retailer` interface for retailer information.
+    * **Component Architecture:**
+        * `CouponList` - Main container component in `src/popup/components/CouponList.tsx`.
+        * `CouponCard` - Individual coupon card component:
+            * Display: Coupon code (prominent), description, success rate percentage.
+            * Actions: "Copy Code" button (copies to clipboard with visual feedback).
+            * Visual indicators: Success rate badge (green for >50%, yellow for 25-50%, red for <25%).
+            * Expiry warning: Show warning icon if expiry date is within 7 days.
+        * `EmptyState` - Display when no coupons are available for the domain.
+        * `ErrorState` - Display when API request fails.
+    * **State Management:**
+        * Loading state: Show skeleton loaders while fetching.
+        * Error state: Display user-friendly error messages with retry button.
+        * Empty state: Show message "No coupons available for this site" with option to contribute.
+        * Success state: Display sorted coupon list (by successCount DESC, then lastSuccessAt).
+    * **Styling:**
+        * Install and configure Tailwind CSS if not already present.
+        * Responsive design: Min-width 320px, max-width 400px for popup.
+        * Clean card layout with proper spacing and hover effects.
+        * Accessible color contrast (WCAG AA compliant).
+    * **User Experience:**
+        * Copy to clipboard: Use `navigator.clipboard.writeText()` with fallback.
+        * Show toast notification: "Code copied!" with auto-dismiss after 2s.
+        * Keyboard navigation: Ensure all interactive elements are keyboard accessible.
+        * Loading animation: Smooth skeleton loaders, avoid jarring transitions.
+    * **Performance:**
+        * Cache coupon data in `chrome.storage.local` for 5 minutes to reduce API calls.
+        * Debounce tab change events to avoid excessive API requests.
+* **Acceptance Criteria:**
+    * ✅ Popup opens and displays loading state immediately.
+    * ✅ Fetches coupons for the current tab's domain.
+    * ✅ Displays coupons sorted by success rate (highest first).
+    * ✅ "Copy Code" button successfully copies coupon code to clipboard.
+    * ✅ Shows appropriate messages for empty states and errors.
+    * ✅ Handles network failures gracefully with retry option.
+    * ✅ Caches results for 5 minutes to improve performance.
+    * ✅ All interactive elements are keyboard accessible.
 * **Testing:**
-    * Mock `chrome.tabs` and `fetch`. Verify list renders correct number of items.
+    * **Unit Tests (Jest + React Testing Library):**
+        * Mock `chrome.tabs.query` to return test tab data.
+        * Mock `fetch` to return test coupon data.
+        * Test loading state renders skeleton loaders.
+        * Test successful data fetch renders correct number of CouponCard components.
+        * Test empty state renders EmptyState component.
+        * Test error state renders ErrorState with retry button.
+        * Test copy button calls `navigator.clipboard.writeText` with correct code.
+        * Test success rate badge colors based on success percentage.
+    * **Integration Tests:**
+        * Test full flow: popup open → fetch → render → copy.
+        * Test cache mechanism: second fetch within 5 minutes uses cached data.
+        * Test retry logic on failed API calls.
 
 ---
 
