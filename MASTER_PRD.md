@@ -235,15 +235,123 @@ The project is architected as a **Monorepo** containing two main services: `exte
 **Goal:** Inject code into the retailer's checkout page to detect input fields and apply coupons.
 
 ### Story 4.1: Input Field Detection (Heuristics)
-* **Description:** A content script that scans the DOM to find the "Promo Code" input box.
-* **AI Instructions:**
-    * Create `client/src/contentScripts/detector.ts`.
-    * Implement function `findCouponInput()`:
-        * Query all `input[type="text"]`.
-        * Filter by attributes (id, name, placeholder, aria-label) containing keywords: `['coupon', 'promo', 'discount', 'voucher']`.
-        * Return the specific DOM element reference.
+* **Description:** A content script that intelligently scans the DOM to find coupon/promo code input fields and their associated submit buttons using multiple detection strategies.
+* **Implementation Requirements:**
+    * **Detection Strategies:**
+        * **Attribute-based detection:**
+            * Search keywords: `['coupon', 'promo', 'promotional', 'discount', 'voucher', 'code', 'gift']`
+            * Check attributes: `id`, `name`, `placeholder`, `aria-label`, `data-*`, `class`
+            * Case-insensitive matching with word boundary detection
+        * **Label-based detection:**
+            * Find `<label>` elements with relevant text, trace to associated input via `for` attribute or DOM hierarchy
+            * Check label text for keywords even if input lacks descriptive attributes
+        * **Input type detection:**
+            * Primary: `input[type="text"]`
+            * Secondary: `input[type="search"]`, `input[type="email"]` (some sites use non-standard types)
+            * Fallback: `input:not([type])` (inputs without explicit type)
+        * **Button/Link detection:**
+            * Find "Apply", "Submit", "Use Code" buttons near detected inputs
+            * Check for `<button>`, `<input type="submit">`, `<a>` with click handlers
+            * Use spatial proximity (within same container/form) and visual hierarchy
+        * **Retailer-specific selectors:**
+            * Support for `selectorConfig` from backend (Story 2.1)
+            * Prioritize retailer-specific CSS selectors when available
+            * Fallback to heuristics if specific selectors fail
+    * **TypeScript Interfaces:**
+        ```typescript
+        interface DetectionResult {
+          inputElement: HTMLInputElement | null;
+          submitElement: HTMLElement | null;
+          confidence: number; // 0-100 score based on detection method
+          detectionMethod: 'retailer-specific' | 'attribute' | 'label' | 'heuristic';
+          containerElement?: HTMLElement; // Parent form or container
+        }
+
+        interface SelectorConfig {
+          input?: string;  // CSS selector for input field
+          submit?: string; // CSS selector for submit button
+          container?: string; // Optional parent container
+        }
+
+        interface DetectorOptions {
+          selectorConfig?: SelectorConfig;
+          keywords?: string[]; // Custom keywords to search for
+          retryAttempts?: number; // Number of retry attempts for dynamic content
+          retryDelay?: number; // Delay between retries in ms
+        }
+        ```
+    * **Module Architecture:**
+        * `client/src/content/detector.ts` - Main detection module
+        * `findCouponElements(options?: DetectorOptions): Promise<DetectionResult>` - Primary detection function
+        * `findByRetailerConfig(config: SelectorConfig): DetectionResult | null` - Retailer-specific detection
+        * `findByAttributes(keywords: string[]): DetectionResult | null` - Attribute-based detection
+        * `findByLabel(keywords: string[]): DetectionResult | null` - Label-based detection
+        * `findSubmitButton(inputElement: HTMLInputElement): HTMLElement | null` - Button detection
+        * `calculateConfidence(element: HTMLElement, method: string): number` - Confidence scoring
+        * `waitForElement(selector: string, timeout: number): Promise<HTMLElement | null>` - Dynamic content handling
+    * **Dynamic Content Handling:**
+        * Implement `MutationObserver` to detect lazy-loaded coupon fields
+        * Watch for changes in subtree with `{ childList: true, subtree: true }`
+        * Debounce observer callbacks to avoid excessive re-detection (300ms delay)
+        * Set timeout for observation (default: 10 seconds)
+        * Disconnect observer once element is found
+    * **Confidence Scoring System:**
+        * Retailer-specific selector match: 100 points
+        * Multiple keyword matches: 80-90 points
+        * Single keyword match with appropriate input type: 60-70 points
+        * Label-based match: 50-60 points
+        * Heuristic fallback: 30-40 points
+        * Return null if confidence < 30 (avoid false positives)
+    * **Error Handling:**
+        * Handle missing elements gracefully (return null, not error)
+        * Log detection attempts and results for debugging (use `console.debug`)
+        * Catch and handle DOM exceptions (SecurityError, InvalidAccessError)
+        * Validate element visibility and interactivity before returning
+    * **Performance:**
+        * Cache detection results for current page (avoid re-scanning on every call)
+        * Use `querySelectorAll` efficiently (specific selectors, not broad scans)
+        * Limit MutationObserver scope to relevant DOM sections when possible
+        * Set maximum retry attempts (default: 3) to prevent infinite loops
+        * Implement early exit when high-confidence match is found
+    * **Accessibility Considerations:**
+        * Respect ARIA attributes (`aria-label`, `aria-labelledby`, `aria-describedby`)
+        * Ensure detected elements are keyboard accessible (`:not([tabindex="-1"])`)
+        * Check element visibility (not `display: none` or `visibility: hidden`)
 * **Acceptance Criteria:**
-    * Script correctly identifies the input box on a test HTML page with `<input id="promo-code">`.
+    * ✅ Correctly identifies coupon input on test pages with various HTML structures:
+        * Standard: `<input id="promo-code" type="text">`
+        * Label-based: `<label for="discount">Discount Code</label><input id="discount">`
+        * Class-based: `<input class="coupon-input" type="text">`
+        * Data attribute: `<input data-coupon-field="true">`
+    * ✅ Finds associated submit button within same form/container
+    * ✅ Returns confidence score (0-100) for each detection
+    * ✅ Handles retailer-specific `selectorConfig` with highest priority
+    * ✅ Detects dynamically loaded elements using MutationObserver
+    * ✅ Returns null for pages without coupon fields (no false positives)
+    * ✅ Completes detection within 10 seconds or returns best match found
+    * ✅ Caches results to avoid redundant DOM scans
+* **Testing:**
+    * **Unit Tests (Jest + jsdom):**
+        * Mock DOM with various coupon field structures (attribute-based, label-based, class-based)
+        * Test `findByRetailerConfig` with valid and invalid selectors
+        * Test `findByAttributes` with keyword matching (case-insensitive, partial match)
+        * Test `findByLabel` with label text containing keywords
+        * Test `findSubmitButton` finds correct button in same container
+        * Test `calculateConfidence` returns appropriate scores for different methods
+        * Test `waitForElement` with simulated dynamic content insertion
+        * Test caching mechanism: second call returns cached result
+        * Test null return for pages without matching elements
+    * **Integration Tests (E2E with test HTML pages):**
+        * Create test HTML files simulating real retailer checkout pages:
+            * `test-amazon-style.html` - Hidden promo field revealed by link
+            * `test-simple-form.html` - Standard input with submit button
+            * `test-dynamic-load.html` - Field loaded after 2-second delay
+            * `test-no-coupon.html` - Page without any coupon field
+        * Load content script in test environment
+        * Verify correct detection on each test page
+        * Verify confidence scores match expected values
+        * Verify MutationObserver detects dynamically added elements
+        * Verify no false positives on pages without coupon fields
 
 ### Story 4.2: The "Auto-Apply" Loop
 * **Description:** Logic to iterate through coupons, input them, and submit.

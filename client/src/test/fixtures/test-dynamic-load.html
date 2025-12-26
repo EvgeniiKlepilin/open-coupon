@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Content Load Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .checkout {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .form-group {
+            margin-bottom: 15px;
+            opacity: 0;
+            animation: fadeIn 0.5s forwards;
+        }
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Checkout (Dynamic Loading)</h1>
+
+    <div class="checkout">
+        <div id="loading-indicator" class="loading">
+            <div class="spinner"></div>
+            <p>Loading checkout form...</p>
+        </div>
+
+        <div id="checkout-form" class="hidden">
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="text" id="email" name="email" placeholder="your@email.com">
+            </div>
+
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" name="name" placeholder="John Doe">
+            </div>
+
+            <!-- This section will be loaded after 2 seconds -->
+            <div id="promo-container"></div>
+
+            <div class="form-group">
+                <button type="button" id="checkout-button">Complete Purchase</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="message" style="margin-top: 20px;"></div>
+
+    <script>
+        // Simulate initial page load
+        setTimeout(() => {
+            document.getElementById('loading-indicator').classList.add('hidden');
+            document.getElementById('checkout-form').classList.remove('hidden');
+
+            // Load promo code section after another 2 seconds (simulating lazy loading)
+            setTimeout(() => {
+                const promoContainer = document.getElementById('promo-container');
+                promoContainer.innerHTML = `
+                    <div class="form-group" style="background-color: #e7f3ff; padding: 15px; border-radius: 4px;">
+                        <label for="discount-code">Discount Code</label>
+                        <input
+                            type="text"
+                            id="discount-code"
+                            name="discount-code"
+                            placeholder="Enter discount code"
+                            data-coupon-field="true"
+                        >
+                        <button type="button" id="apply-discount" style="margin-top: 10px; background-color: #007bff;">
+                            Apply Discount
+                        </button>
+                    </div>
+                `;
+
+                // Add event listener to the dynamically created button
+                document.getElementById('apply-discount').addEventListener('click', function() {
+                    const code = document.getElementById('discount-code').value.trim();
+                    const message = document.getElementById('message');
+
+                    if (code) {
+                        message.innerHTML = `<p style="color: green;">✓ Discount code "${code}" applied!</p>`;
+                    } else {
+                        message.innerHTML = `<p style="color: red;">✗ Please enter a discount code</p>`;
+                    }
+                });
+
+                console.log('Promo code section loaded dynamically');
+            }, 2000);
+        }, 1000);
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Checkout button handler
+            const checkoutButton = document.getElementById('checkout-button');
+            if (checkoutButton) {
+                checkoutButton.addEventListener('click', function() {
+                    const message = document.getElementById('message');
+                    message.innerHTML = '<p style="color: blue;">Processing checkout...</p>';
+                });
+            }
+        });
+    </script>
+</body>
+</html>

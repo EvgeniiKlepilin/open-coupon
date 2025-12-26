@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amazon-Style Hidden Coupon Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .order-summary {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .promo-toggle {
+            color: #007bff;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .promo-toggle:hover {
+            text-decoration: underline;
+        }
+        .promo-section {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        .promo-section.visible {
+            display: block;
+        }
+        .form-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #ffa724;
+            color: #111;
+            padding: 8px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #ff9900;
+        }
+        .total {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Order Summary</h1>
+
+    <div class="order-summary">
+        <div>
+            <p>Subtotal: $99.99</p>
+            <p>Shipping: $5.00</p>
+        </div>
+
+        <a href="#" class="promo-toggle" id="toggle-promo">Add a gift card or promotion code</a>
+
+        <div class="promo-section" id="promo-section">
+            <div class="form-row">
+                <input
+                    type="text"
+                    id="gift-code-input"
+                    name="gift-code"
+                    placeholder="Enter Code"
+                    aria-label="Gift card or promo code"
+                >
+                <button type="button" id="apply-gift-code">Apply</button>
+            </div>
+        </div>
+
+        <div class="total" id="total">
+            Total: $104.99
+        </div>
+    </div>
+
+    <div id="message" style="margin-top: 20px;"></div>
+
+    <script>
+        const toggle = document.getElementById('toggle-promo');
+        const promoSection = document.getElementById('promo-section');
+        const applyButton = document.getElementById('apply-gift-code');
+        const input = document.getElementById('gift-code-input');
+        const total = document.getElementById('total');
+        const message = document.getElementById('message');
+
+        toggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            promoSection.classList.toggle('visible');
+            if (promoSection.classList.contains('visible')) {
+                toggle.textContent = 'Hide promotion code';
+                input.focus();
+            } else {
+                toggle.textContent = 'Add a gift card or promotion code';
+            }
+        });
+
+        applyButton.addEventListener('click', function() {
+            const code = input.value.trim();
+
+            if (!code) {
+                message.innerHTML = '<p style="color: red;">Please enter a code</p>';
+                return;
+            }
+
+            // Simulate discount codes
+            const discounts = {
+                'SAVE10': 10.49,
+                'SAVE20': 20.99,
+                'FREESHIP': 5.00
+            };
+
+            if (discounts[code.toUpperCase()]) {
+                const discount = discounts[code.toUpperCase()];
+                const newTotal = (104.99 - discount).toFixed(2);
+                total.textContent = `Total: $${newTotal}`;
+                message.innerHTML = `<p style="color: green;">✓ Code "${code}" applied! You saved $${discount.toFixed(2)}</p>`;
+            } else {
+                message.innerHTML = `<p style="color: orange;">⚠ Code "${code}" is not valid</p>`;
+            }
+        });
+    </script>
+</body>
+</html>

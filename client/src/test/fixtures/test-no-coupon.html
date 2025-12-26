@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>No Coupon Field Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .checkout-form {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .order-summary {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Checkout - Payment Information</h1>
+
+    <div class="order-summary">
+        <h3>Order Summary</h3>
+        <p>Product: Premium Widget</p>
+        <p>Price: $99.99</p>
+        <p>Shipping: $5.00</p>
+        <p><strong>Total: $104.99</strong></p>
+    </div>
+
+    <form class="checkout-form">
+        <h3>Billing Information</h3>
+
+        <div class="form-group">
+            <label for="full-name">Full Name</label>
+            <input type="text" id="full-name" name="full-name" placeholder="John Doe" required>
+        </div>
+
+        <div class="form-group">
+            <label for="email-address">Email Address</label>
+            <input type="email" id="email-address" name="email" placeholder="john@example.com" required>
+        </div>
+
+        <div class="form-group">
+            <label for="phone-number">Phone Number</label>
+            <input type="tel" id="phone-number" name="phone" placeholder="(555) 123-4567">
+        </div>
+
+        <div class="form-group">
+            <label for="card-number">Credit Card Number</label>
+            <input type="text" id="card-number" name="card-number" placeholder="1234 5678 9012 3456" required>
+        </div>
+
+        <div class="form-group">
+            <label for="expiry">Expiry Date</label>
+            <input type="text" id="expiry" name="expiry" placeholder="MM/YY" required>
+        </div>
+
+        <div class="form-group">
+            <label for="cvv">CVV</label>
+            <input type="text" id="cvv" name="cvv" placeholder="123" required>
+        </div>
+
+        <div class="form-group">
+            <label for="billing-address">Billing Address</label>
+            <textarea id="billing-address" name="billing-address" rows="3" placeholder="123 Main St, City, State ZIP"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="special-instructions">Special Instructions (Optional)</label>
+            <textarea id="special-instructions" name="special-instructions" rows="2" placeholder="Any special delivery instructions..."></textarea>
+        </div>
+
+        <div class="form-group">
+            <button type="submit">Complete Purchase</button>
+        </div>
+    </form>
+
+    <div id="result" style="margin-top: 20px;"></div>
+
+    <script>
+        document.querySelector('.checkout-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const result = document.getElementById('result');
+            result.innerHTML = '<p style="color: green;">✓ Order placed successfully! (This is a test page)</p>';
+        });
+    </script>
+</body>
+</html>

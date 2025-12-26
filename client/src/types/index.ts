@@ -37,3 +37,27 @@ export interface CacheEntry<T> {
   data: T;
   timestamp: number;
 }
+
+// Detector types
+export type DetectionMethod = 'retailer-specific' | 'attribute' | 'label' | 'heuristic';
+
+export interface DetectionResult {
+  inputElement: HTMLInputElement | null;
+  submitElement: HTMLElement | null;
+  confidence: number;
+  detectionMethod: DetectionMethod;
+  containerElement?: HTMLElement;
+}
+
+export interface SelectorConfig {
+  input?: string;
+  submit?: string;
+  container?: string;
+}
+
+export interface DetectorOptions {
+  selectorConfig?: SelectorConfig;
+  keywords?: string[];
+  retryAttempts?: number;
+  retryDelay?: number;
+}
