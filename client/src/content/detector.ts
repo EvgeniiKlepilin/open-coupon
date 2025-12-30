@@ -392,7 +392,7 @@ function isElementValid(element: HTMLElement): boolean {
   return (
     element !== null &&
     isElementVisible(element) &&
-    !element.disabled &&
+    !('disabled' in element && (element as HTMLInputElement | HTMLButtonElement).disabled) &&
     element.getAttribute('tabindex') !== '-1'
   );
 }

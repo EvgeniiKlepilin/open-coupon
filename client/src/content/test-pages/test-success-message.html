@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Success Message Test Page</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 700px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f0f2f5;
+    }
+    .container {
+      background: white;
+      padding: 40px;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #1c1e21;
+      margin-top: 0;
+    }
+    .info-banner {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 25px;
+    }
+    .coupon-section {
+      margin: 25px 0;
+    }
+    .input-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .promo-input {
+      flex: 1;
+      padding: 12px;
+      border: 2px solid #d0d7de;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+    .promo-input:focus {
+      outline: none;
+      border-color: #0969da;
+    }
+    .apply-btn {
+      padding: 12px 24px;
+      background: #0969da;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .apply-btn:hover:not(:disabled) {
+      background: #0550ae;
+    }
+    .apply-btn:disabled {
+      background: #8c959f;
+      cursor: not-allowed;
+    }
+    .success-alert {
+      display: none;
+      background: #d4edda;
+      border: 2px solid #28a745;
+      color: #155724;
+      padding: 15px;
+      border-radius: 6px;
+      margin: 15px 0;
+      position: relative;
+      animation: slideDown 0.3s ease-out;
+    }
+    .success-alert.show {
+      display: block;
+    }
+    .success-alert::before {
+      content: "✓";
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      background: #28a745;
+      color: white;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 24px;
+      margin-right: 10px;
+      font-weight: bold;
+    }
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .order-details {
+      margin-top: 30px;
+      padding: 20px;
+      background: #f6f8fa;
+      border-radius: 6px;
+    }
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #d0d7de;
+    }
+    .detail-row:last-child {
+      border-bottom: none;
+    }
+    .detail-label {
+      color: #57606a;
+    }
+    .detail-value {
+      font-weight: 600;
+      color: #1c1e21;
+    }
+    .savings {
+      color: #1a7f37;
+    }
+    .final-total {
+      font-size: 20px;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 2px solid #1c1e21;
+    }
+    .note {
+      margin-top: 20px;
+      padding: 15px;
+      background: #ddf4ff;
+      border-left: 4px solid #0969da;
+      border-radius: 4px;
+      font-size: 14px;
+      color: #0550ae;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Success Message Detection Test</h1>
+
+    <div class="info-banner">
+      <strong>📋 Test Scenario:</strong> This page shows success messages instead of immediate price changes.
+      The detector should recognize success indicators even when price updates are delayed or minimal.
+    </div>
+
+    <div class="coupon-section">
+      <label for="voucher-code" style="display: block; margin-bottom: 8px; font-weight: 600;">
+        Gift Card or Voucher Code
+      </label>
+      <div class="input-group">
+        <input
+          type="text"
+          id="voucher-code"
+          class="promo-input"
+          placeholder="Enter voucher code"
+          aria-label="Voucher code"
+        />
+        <button class="apply-btn" id="redeem-btn">
+          Redeem
+        </button>
+      </div>
+    </div>
+
+    <div class="success-alert" id="success-message" role="alert" aria-live="polite">
+      <strong>Discount applied successfully!</strong> Your savings have been added to your order.
+    </div>
+
+    <div class="order-details">
+      <div class="detail-row">
+        <span class="detail-label">Order Subtotal</span>
+        <span class="detail-value">$250.00</span>
+      </div>
+
+      <div class="detail-row" id="savings-row" style="display: none;">
+        <span class="detail-label">You Saved</span>
+        <span class="detail-value savings" id="savings-amount">$0.00</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="detail-label">Shipping & Handling</span>
+        <span class="detail-value">$20.00</span>
+      </div>
+
+      <div class="detail-row final-total">
+        <span class="detail-label">Order Total</span>
+        <span class="detail-value" id="order-total">$270.00</span>
+      </div>
+    </div>
+
+    <div class="note">
+      <strong>💡 Valid Codes:</strong> GIFT25, GIFT50, GIFT100, VIPFREE
+      <br>These codes show success messages immediately, with price updates following shortly after.
+    </div>
+  </div>
+
+  <script>
+    const validCoupons = {
+      'GIFT25': 25.00,
+      'GIFT50': 50.00,
+      'GIFT100': 100.00,
+      'VIPFREE': 250.00,
+    };
+
+    const redeemButton = document.getElementById('redeem-btn');
+    const voucherInput = document.getElementById('voucher-code');
+    const successMessage = document.getElementById('success-message');
+    const orderTotalElement = document.getElementById('order-total');
+    const savingsRow = document.getElementById('savings-row');
+    const savingsAmount = document.getElementById('savings-amount');
+
+    const baseTotal = 270.00;
+
+    redeemButton.addEventListener('click', function() {
+      const code = voucherInput.value.trim().toUpperCase();
+
+      // Hide previous success message
+      successMessage.classList.remove('show');
+
+      if (!code) {
+        alert('Please enter a voucher code');
+        return;
+      }
+
+      // Disable button during processing
+      redeemButton.disabled = true;
+      redeemButton.textContent = 'Processing...';
+
+      // Simulate API call
+      setTimeout(() => {
+        if (validCoupons[code]) {
+          // Show success message IMMEDIATELY (before price update)
+          successMessage.classList.add('show');
+
+          const discount = validCoupons[code];
+
+          // Show savings
+          savingsAmount.textContent = `$${discount.toFixed(2)}`;
+          savingsRow.style.display = 'flex';
+
+          // Update price with additional delay (1 second after success message)
+          setTimeout(() => {
+            const newTotal = baseTotal - discount;
+            orderTotalElement.textContent = `$${newTotal.toFixed(2)}`;
+            orderTotalElement.style.color = '#1a7f37';
+
+            console.log('✅ Price updated after success message');
+          }, 1000);
+
+          console.log('✅ Success message shown');
+        } else {
+          // Invalid code
+          alert(`Voucher code "${code}" is not recognized`);
+        }
+
+        redeemButton.disabled = false;
+        redeemButton.textContent = 'Redeem';
+      }, 500);
+    });
+
+    // Support Enter key
+    voucherInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        redeemButton.click();
+      }
+    });
+  </script>
+</body>
+</html>

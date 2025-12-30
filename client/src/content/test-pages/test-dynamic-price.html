@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dynamic Price Update Test Page</title>
+  <style>
+    body {
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+    .checkout-card {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+    h1 {
+      margin-top: 0;
+      color: #333;
+    }
+    .info-box {
+      background: #e8f4f8;
+      border-left: 4px solid #2196F3;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 4px;
+    }
+    .coupon-form {
+      margin: 20px 0;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 600;
+      color: #555;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      font-size: 16px;
+      box-sizing: border-box;
+      transition: border-color 0.3s;
+    }
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    .submit-btn {
+      width: 100%;
+      padding: 12px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .submit-btn:hover:not(:disabled) {
+      background: #5568d3;
+    }
+    .submit-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .loading-spinner {
+      display: none;
+      text-align: center;
+      padding: 20px;
+    }
+    .loading-spinner.active {
+      display: block;
+    }
+    .spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .price-summary {
+      margin-top: 30px;
+      padding: 20px;
+      background: #f9f9f9;
+      border-radius: 8px;
+    }
+    .price-row {
+      display: flex;
+      justify-content: space-between;
+      margin: 10px 0;
+      font-size: 16px;
+    }
+    .price-total {
+      font-size: 24px;
+      font-weight: bold;
+      color: #667eea;
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 2px solid #ddd;
+    }
+    .discount-applied {
+      color: #27ae60;
+      font-weight: 600;
+      display: none;
+    }
+    .discount-applied.active {
+      display: flex;
+    }
+  </style>
+</head>
+<body>
+  <div class="checkout-card">
+    <h1>Dynamic Price Test</h1>
+
+    <div class="info-box">
+      <strong>⏱️ Delayed Price Update</strong><br>
+      This page simulates a real e-commerce checkout with AJAX price updates.
+      Price changes occur 2 seconds after applying a coupon to test MutationObserver functionality.
+    </div>
+
+    <div class="coupon-form">
+      <div class="form-group">
+        <label for="promo-code">Promotional Code</label>
+        <input
+          type="text"
+          id="promo-code"
+          name="promocode"
+          placeholder="Enter your code"
+          data-coupon-field="true"
+        />
+      </div>
+      <button type="button" class="submit-btn" id="apply-btn">
+        Apply Code
+      </button>
+    </div>
+
+    <div class="loading-spinner" id="loading">
+      <div class="spinner"></div>
+      <p>Verifying coupon...</p>
+    </div>
+
+    <div class="price-summary">
+      <div class="price-row">
+        <span>Subtotal:</span>
+        <span>$150.00</span>
+      </div>
+
+      <div class="price-row discount-applied" id="discount-row">
+        <span>Discount:</span>
+        <span id="discount-amount">-$0.00</span>
+      </div>
+
+      <div class="price-row">
+        <span>Tax:</span>
+        <span>$12.00</span>
+      </div>
+
+      <div class="price-row price-total">
+        <span>Total:</span>
+        <span id="total-price">$162.00</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Test coupons with different discounts
+    const validCoupons = {
+      'ASYNC10': 15.00,
+      'ASYNC20': 30.00,
+      'ASYNC50': 75.00,
+      'DELUXE': 100.00,
+    };
+
+    const applyButton = document.getElementById('apply-btn');
+    const couponInput = document.getElementById('promo-code');
+    const loadingDiv = document.getElementById('loading');
+    const totalPriceElement = document.getElementById('total-price');
+    const discountRow = document.getElementById('discount-row');
+    const discountAmount = document.getElementById('discount-amount');
+
+    const baseTotal = 162.00;
+    let currentDiscount = 0;
+
+    applyButton.addEventListener('click', function() {
+      const code = couponInput.value.trim().toUpperCase();
+
+      if (!code) {
+        alert('Please enter a promotional code');
+        return;
+      }
+
+      // Show loading state
+      applyButton.disabled = true;
+      loadingDiv.classList.add('active');
+      discountRow.classList.remove('active');
+
+      // Simulate AJAX request with 2-second delay
+      setTimeout(() => {
+        loadingDiv.classList.remove('active');
+        applyButton.disabled = false;
+
+        if (validCoupons[code]) {
+          // Valid coupon - update price after delay
+          currentDiscount = validCoupons[code];
+
+          // Update discount display
+          discountAmount.textContent = `-$${currentDiscount.toFixed(2)}`;
+          discountRow.classList.add('active');
+
+          // Update total price (this triggers MutationObserver)
+          const newTotal = baseTotal - currentDiscount;
+          totalPriceElement.textContent = `$${newTotal.toFixed(2)}`;
+          totalPriceElement.style.color = '#27ae60';
+
+          console.log('✅ Coupon applied successfully');
+        } else {
+          // Invalid coupon
+          alert(`Coupon "${code}" is not valid`);
+          console.log('❌ Invalid coupon code');
+        }
+      }, 2000); // 2-second delay to test async detection
+    });
+
+    // Support Enter key
+    couponInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        applyButton.click();
+      }
+    });
+  </script>
+</body>
+</html>

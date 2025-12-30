@@ -15,11 +15,11 @@ export default defineManifest({
     default_popup: 'src/popup/index.html',
   },
   permissions: ['sidePanel', 'contentSettings', 'activeTab', 'storage', 'scripting'],
-  host_permissions: ['http://localhost:3030/*', 'https://*/*'],
+  host_permissions: ['http://localhost:3030/*', 'http://*/*', 'https://*/*', 'file:///*'],
   content_scripts: [
     {
       js: ['src/content/main.tsx'],
-      matches: ['https://*/*'],
+      matches: ['http://*/*', 'https://*/*', 'file:///*'],
     },
   ],
   side_panel: {

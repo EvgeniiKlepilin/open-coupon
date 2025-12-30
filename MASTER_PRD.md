@@ -354,21 +354,304 @@ The project is architected as a **Monorepo** containing two main services: `exte
         * Verify no false positives on pages without coupon fields
 
 ### Story 4.2: The "Auto-Apply" Loop
-* **Description:** Logic to iterate through coupons, input them, and submit.
-* **AI Instructions:**
-    * Create `client/src/contentScripts/applier.ts`.
-    * Function `applyCoupons(coupons: string[], inputElement: HTMLElement, submitBtn: HTMLElement)`.
-    * Loop Logic:
-        1. Set `inputElement.value = coupons[i]`.
-        2. Dispatch `new Event('input', { bubbles: true })` (React requires this).
-        3. `submitBtn.click()`.
-        4. Wait 2 seconds (or observe DOM mutation for price change).
-        5. Record resulting price.
-        6. Repeat.
-* **Best Practices:**
-    * Use `MutationObserver` rather than hardcoded `setTimeout` if possible to detect cart updates.
-* **Documentation:**
-    * Add a warning comment about rate limiting and anti-bot measures.
+* **Description:** Automated logic to intelligently iterate through available coupons, apply them to the detected input field, and determine which coupon provides the best discount by monitoring price changes and success indicators.
+* **Implementation Requirements:**
+    * **Auto-Apply Flow:**
+        * User initiates auto-apply from popup UI (button click)
+        * Display progress modal/overlay on the page showing:
+            * Current coupon being tested (e.g., "Testing SAVE20... (3/10)")
+            * Progress bar with percentage completion
+            * Best discount found so far
+            * Cancel button for user interruption
+        * Test coupons sequentially from highest to lowest confidence (based on `successCount`)
+        * Respect rate limiting delays between attempts (configurable, default: 2-3 seconds)
+        * Support cancellation at any point without breaking page functionality
+    * **Price Detection Strategies:**
+        * **Multi-strategy price detection:**
+            * Primary: Look for common price selectors (`.total`, `.grand-total`, `[data-test="total"]`, etc.)
+            * Secondary: Regex scan for currency patterns (`$XX.XX`, `€XX,XX`, `£XX.XX`)
+            * Tertiary: Monitor for "discount applied" success messages
+            * Fallback: Compare entire cart/checkout section HTML before/after
+        * **Price normalization:**
+            * Strip currency symbols and formatting (`$1,234.56` → `1234.56`)
+            * Handle international formats (comma vs period decimal separators)
+            * Store as numeric value for comparison
+        * **Baseline price capture:**
+            * Capture initial price before any coupon application
+            * Use as reference for calculating discount amount
+            * Detect if page already has a coupon applied (warn user)
+    * **Coupon Application Logic:**
+        * **Input field interaction:**
+            * Clear existing value: `inputElement.value = ''`
+            * Set new coupon code: `inputElement.value = coupon.code`
+            * Dispatch required events for framework detection:
+                * `new Event('input', { bubbles: true })` - For React
+                * `new Event('change', { bubbles: true })` - For Vue/Angular
+                * `new KeyboardEvent('keyup', { bubbles: true })` - For vanilla JS listeners
+            * Optional: Trigger focus/blur events if needed
+        * **Submit button interaction:**
+            * Click submit button: `submitBtn.click()`
+            * Alternative: Submit parent form if button click fails: `form.submit()`
+            * Handle disabled buttons (wait for re-enable with timeout)
+        * **Wait for response:**
+            * Use `MutationObserver` to watch for price/cart section changes
+            * Set timeout threshold: 5 seconds default, configurable up to 10 seconds
+            * Detect success indicators:
+                * Price decrease detected
+                * Success message appears (e.g., "Coupon applied successfully")
+                * Green checkmark or success icon
+            * Detect failure indicators:
+                * Error message appears (e.g., "Invalid coupon", "Expired")
+                * Price unchanged after timeout
+                * Input field shows error styling (red border, shake animation)
+    * **Success/Failure Detection:**
+        * **Success criteria (prioritized):**
+            1. Price decreased from previous state
+            2. Success message detected in DOM (keyword search: "applied", "success", "saved")
+            3. Visual success indicator (green checkmark, success icon with aria-label)
+            4. Discount line item added to order summary
+        * **Failure criteria:**
+            1. Error message detected (keywords: "invalid", "expired", "not valid", "incorrect")
+            2. Price unchanged after timeout
+            3. Coupon input cleared automatically by site
+            4. Error styling applied to input field
+        * **Ambiguous state handling:**
+            * If neither success nor failure detected after timeout, mark as "uncertain"
+            * Continue to next coupon but log the uncertain result
+            * Don't report uncertain results to feedback API
+    * **Result Tracking:**
+        * Track each coupon attempt with:
+            * Coupon code tested
+            * Price before application
+            * Price after application
+            * Discount amount (calculated)
+            * Success/failure status
+            * Detection method used
+            * Time taken to detect result
+        * Keep best result (largest discount) in memory
+        * At end of loop, re-apply best coupon if different from last tested
+    * **Anti-Bot Detection Avoidance:**
+        * **Human-like behavior simulation:**
+            * Random delay variation: 2-4 seconds between attempts (not fixed 2 seconds)
+            * Mouse movement simulation: Move cursor to input before typing (optional)
+            * Typing simulation: Set value character-by-character with small delays (optional, configurable)
+        * **Rate limiting:**
+            * Respect configurable max attempts per session (default: 20 coupons)
+            * Implement exponential backoff if error rate increases
+            * Stop immediately if CAPTCHA detected
+        * **Warning messages:**
+            * Display warning if testing >10 coupons ("This may take a while...")
+            * Warn about potential rate limiting on known strict retailers
+            * Log all attempts for debugging without exposing sensitive data
+* **TypeScript Interfaces:**
+    ```typescript
+    interface PriceInfo {
+      value: number;           // Normalized numeric price
+      rawText: string;         // Original price text from DOM
+      currency: string;        // Detected currency symbol
+      element: HTMLElement | null; // DOM element containing price
+      detectedAt: number;      // Timestamp (Date.now())
+    }
+
+    interface CouponTestResult {
+      couponId: string;
+      code: string;
+      priceBefore: PriceInfo;
+      priceAfter: PriceInfo;
+      discountAmount: number;  // Calculated: priceBefore - priceAfter
+      discountPercentage: number; // Calculated: (discount / priceBefore) * 100
+      success: boolean;
+      failureReason?: string;  // e.g., "Invalid coupon", "Expired", "Timeout"
+      detectionMethod: 'price-change' | 'success-message' | 'failure-message' | 'timeout';
+      durationMs: number;      // Time taken to test this coupon
+    }
+
+    interface ApplierResult {
+      tested: number;          // Total coupons tested
+      successful: number;      // Number that successfully applied
+      failed: number;          // Number that failed
+      bestCoupon: CouponTestResult | null; // Coupon with largest discount
+      allResults: CouponTestResult[]; // Full test history
+      cancelledByUser: boolean;
+      errorMessage?: string;   // Fatal error that stopped the process
+    }
+
+    interface ApplierOptions {
+      coupons: Coupon[];       // List of coupons to test (from API)
+      inputElement: HTMLInputElement;
+      submitElement: HTMLElement;
+      priceSelectors?: string[]; // Custom price element selectors
+      delayBetweenAttempts?: number; // Milliseconds (default: 2000-4000 random)
+      maxAttempts?: number;    // Maximum coupons to test (default: 20)
+      timeout?: number;        // Max wait per coupon (default: 5000ms)
+      onProgress?: (current: number, total: number, couponCode: string) => void;
+      onCouponTested?: (result: CouponTestResult) => void;
+      onComplete?: (result: ApplierResult) => void;
+      onCancel?: () => void;
+    }
+    ```
+* **Module Architecture:**
+    * `client/src/content/applier.ts` - Main auto-apply orchestration module
+    * **Core Functions:**
+        * `autoApplyCoupons(options: ApplierOptions): Promise<ApplierResult>` - Main entry point
+        * `detectPrice(selectors?: string[]): Promise<PriceInfo | null>` - Multi-strategy price detection
+        * `normalizePrice(priceText: string): number` - Parse and normalize price strings
+        * `applySingleCoupon(code: string, input: HTMLInputElement, submit: HTMLElement): Promise<void>` - Apply one coupon
+        * `waitForPriceChange(basePrice: PriceInfo, timeout: number): Promise<PriceInfo>` - Wait for price update via MutationObserver
+        * `detectSuccessIndicators(): { success: boolean; message?: string }` - Scan for success/error messages
+        * `simulateHumanDelay(min: number, max: number): Promise<void>` - Random delay utility
+        * `reapplyBestCoupon(couponCode: string, input: HTMLInputElement, submit: HTMLElement): Promise<void>` - Re-apply winning coupon at end
+    * **State Management:**
+        * Maintain internal state object tracking current test progress
+        * Allow external cancellation via AbortController pattern
+        * Persist partial results to `chrome.storage.local` in case of crash
+* **Dynamic Content Handling:**
+    * **MutationObserver for price changes:**
+        * Watch checkout/cart container for any DOM changes
+        * Debounce observer callbacks (100ms) to avoid rapid re-checks
+        * Look for changes in price element text content
+        * Disconnect observer when price change detected or timeout reached
+    * **Waiting for UI updates:**
+        * After clicking submit, wait for loading indicators to disappear
+        * Common loading indicators: spinners, disabled buttons, overlay masks
+        * Maximum wait time per coupon: 5 seconds (configurable)
+    * **Handling SPA re-renders:**
+        * Some sites replace entire cart section after coupon apply
+        * Re-query price element after each application (don't cache reference)
+        * Validate element is still in DOM before reading value
+* **Error Handling:**
+    * **Graceful degradation:**
+        * If price detection fails, ask user to manually verify best coupon
+        * If submit button becomes unclickable, log error and skip to next coupon
+        * If DOM structure changes mid-process, attempt to re-detect elements
+    * **User interruption:**
+        * Support cancellation via AbortController
+        * When cancelled, return partial results with `cancelledByUser: true`
+        * Restore original page state if possible (clear coupon input)
+    * **Rate limiting detection:**
+        * If multiple consecutive failures (>5), assume rate limiting
+        * Stop auto-apply and show warning to user
+        * Log failure pattern for debugging
+    * **Error logging:**
+        * Use `console.debug` for normal flow logs (can be filtered out)
+        * Use `console.warn` for unexpected but recoverable errors
+        * Use `console.error` for fatal errors that stop the process
+        * Never expose sensitive data (full prices, user info) in logs
+* **Performance:**
+    * **Delay optimization:**
+        * Minimum delay: 1.5 seconds (avoid too-fast bot detection)
+        * Maximum delay: 4 seconds (avoid user frustration)
+        * Random variation within range for human-like behavior
+    * **Batch processing limits:**
+        * Default max: 20 coupons per session
+        * If >20 coupons available, test only top 20 by success rate
+        * Allow user to configure max in extension settings
+    * **Memory management:**
+        * Clear `allResults` array after sending feedback to API
+        * Disconnect MutationObservers when done
+        * Remove progress UI elements from DOM when complete
+    * **Early termination:**
+        * If 100% discount found, stop immediately (free item!)
+        * If user cancels, stop immediately and clean up
+        * If CAPTCHA detected, stop and alert user
+* **User Experience:**
+    * **Progress Indicator:**
+        * Overlay modal: Semi-transparent backdrop, centered card
+        * Show: "Testing coupons... (3/10)" with spinner
+        * Show: "Best discount so far: $15.50 (25% off)"
+        * Cancel button: "Stop Testing" (always visible and clickable)
+    * **Success Notification:**
+        * When complete: "Found best coupon: SAVE20 - saved $25.00!"
+        * Auto-dismiss after 5 seconds or user dismissal
+        * Option to "Apply Best Coupon" if not auto-applied
+    * **Error Recovery:**
+        * If all coupons fail: "No valid coupons found for this purchase"
+        * If cancelled: "Coupon testing cancelled. Best so far: ..." or "No coupons tested yet"
+        * If fatal error: "Unable to test coupons. Please try manually."
+    * **Accessibility:**
+        * Progress modal should be keyboard accessible (focus trap)
+        * Cancel button focusable and activated by Enter/Space
+        * Announce progress to screen readers via `aria-live` region
+* **Acceptance Criteria:**
+    * ✅ Successfully tests multiple coupons sequentially on checkout page
+    * ✅ Detects price changes after each coupon application using MutationObserver
+    * ✅ Correctly identifies success/failure based on DOM changes and messages
+    * ✅ Returns best coupon (largest discount) at end of test cycle
+    * ✅ Re-applies best coupon if different from last tested coupon
+    * ✅ Displays real-time progress to user in on-page modal
+    * ✅ Supports user cancellation at any point without breaking page
+    * ✅ Handles edge cases: no price change, ambiguous results, timeout
+    * ✅ Uses random delays (2-4 seconds) between attempts to avoid bot detection
+    * ✅ Stops testing if CAPTCHA detected or excessive failures occur
+    * ✅ Logs all attempts for debugging without exposing sensitive data
+    * ✅ Gracefully handles price detection failures (prompts user verification)
+    * ✅ Works with common e-commerce platforms (Shopify, WooCommerce, Magento)
+    * ✅ Respects configurable limits (max coupons to test, timeout per coupon)
+* **Testing:**
+    * **Unit Tests (Jest + jsdom):**
+        * **Price Detection:**
+            * Mock DOM with various price elements (class-based, ID-based, data attributes)
+            * Test `detectPrice` with different price formats: `$1,234.56`, `€1.234,56`, `£1234.56`
+            * Test `normalizePrice` correctly parses all common currency formats
+            * Test price detection returns null when no price element found
+        * **Coupon Application:**
+            * Mock input element and submit button
+            * Test `applySingleCoupon` sets input value correctly
+            * Test dispatches all required events (input, change, keyup)
+            * Test handles disabled submit buttons gracefully
+        * **Result Tracking:**
+            * Test `CouponTestResult` correctly calculates discount amount and percentage
+            * Test result tracking maintains history of all tested coupons
+            * Test identifies best coupon (highest discount) from multiple results
+        * **State Management:**
+            * Test cancellation via AbortController stops process immediately
+            * Test partial results returned when cancelled mid-process
+            * Test state persistence to chrome.storage.local on each coupon test
+        * **Error Handling:**
+            * Test graceful handling when price detection fails
+            * Test graceful handling when submit button not found after DOM change
+            * Test rate limiting detection after 5+ consecutive failures
+    * **Integration Tests (E2E with test checkout pages):**
+        * Create test HTML files simulating real checkout pages:
+            * `test-shopify-checkout.html` - Standard Shopify checkout with price in `.total-line__price`
+            * `test-woocommerce-checkout.html` - WooCommerce with price in `.order-total .amount`
+            * `test-dynamic-price.html` - Price updates via AJAX after 1-second delay
+            * `test-success-message.html` - Shows "Coupon applied!" message instead of immediate price change
+            * `test-error-message.html` - Shows "Invalid coupon" error message
+        * Test scenarios:
+            * **Scenario 1: Happy path**
+                * Test page with 5 coupons (3 valid, 2 invalid)
+                * Verify all 5 tested sequentially
+                * Verify best coupon identified and re-applied
+                * Verify progress UI updates correctly
+            * **Scenario 2: All coupons fail**
+                * Test with 3 invalid coupons
+                * Verify all marked as failed
+                * Verify appropriate error message shown to user
+            * **Scenario 3: User cancellation**
+                * Start auto-apply with 10 coupons
+                * Cancel after 3rd coupon tested
+                * Verify process stops immediately
+                * Verify partial results returned (3 tested)
+            * **Scenario 4: Price detection failure**
+                * Test on page with no detectable price element
+                * Verify graceful handling with user prompt
+            * **Scenario 5: Dynamic price updates**
+                * Test on page where price updates after 2-second delay
+                * Verify MutationObserver detects delayed price change
+                * Verify doesn't timeout prematurely
+        * Performance tests:
+            * Verify delays between attempts are randomized (2-4 seconds)
+            * Verify max attempts limit respected (stops at 20 coupons)
+            * Verify MutationObserver disconnects after each coupon test
+* **Best Practices & Warnings:**
+    * ⚠️ **Rate Limiting:** Retailers may block IPs that test too many coupons too quickly. Implement exponential backoff and respect delays.
+    * ⚠️ **CAPTCHA Detection:** If CAPTCHA appears, stop immediately and alert user. Do not attempt to bypass.
+    * ⚠️ **Anti-Bot Measures:** Many sites use bot detection (e.g., reCAPTCHA, Cloudflare). Simulate human behavior with random delays and realistic event sequences.
+    * ⚠️ **Privacy:** Never log full prices, user addresses, or payment info. Only log discount amounts and coupon codes.
+    * ⚠️ **Error Recovery:** Always restore page to functional state after errors. Clear test coupons, re-enable buttons, remove overlays.
+    * 💡 **Optimization:** Cache price selectors per domain in `chrome.storage.local` to speed up future detections on same site.
+    * 💡 **User Control:** Always provide cancel button. Never force auto-apply without user consent.
 
 ### Story 4.3: Feedback Loop API
 * **Description:** Report which coupon worked back to the server.

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WooCommerce-Style Checkout Test Page</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1000px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f7f7f7;
+    }
+    .woocommerce-checkout {
+      background: white;
+      padding: 30px;
+      border-radius: 4px;
+    }
+    .cart_totals {
+      margin-top: 30px;
+      padding: 20px;
+      background: #f9f9f9;
+      border: 1px solid #e1e1e1;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #e1e1e1;
+    }
+    .order-total {
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .order-total .amount {
+      color: #96588a;
+    }
+    .cart-discount {
+      color: #77a464;
+      display: none;
+    }
+    .cart-discount.active {
+      display: table-row;
+    }
+    .woocommerce-form-coupon {
+      margin: 20px 0;
+      padding: 20px;
+      background: #f9f9f9;
+      border: 1px solid #e1e1e1;
+    }
+    .input-text {
+      width: 200px;
+      padding: 8px 12px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      margin-right: 10px;
+    }
+    .button {
+      background: #96588a;
+      color: white;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .button:hover {
+      background: #7b4472;
+    }
+    .woocommerce-message {
+      padding: 15px;
+      margin: 15px 0;
+      background: #f7f6f7;
+      border-left: 4px solid #96588a;
+      display: none;
+    }
+    .woocommerce-message.show {
+      display: block;
+    }
+    .woocommerce-error {
+      padding: 15px;
+      margin: 15px 0;
+      background: #e2401c;
+      color: white;
+      border-radius: 3px;
+      display: none;
+    }
+    .woocommerce-error.show {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="woocommerce-checkout">
+    <h1>Checkout</h1>
+
+    <div class="woocommerce-form-coupon">
+      <p>Have a coupon?</p>
+      <input
+        type="text"
+        name="coupon_code"
+        class="input-text"
+        placeholder="Coupon code"
+        id="coupon_code"
+      />
+      <button type="button" class="button" id="apply_coupon">Apply coupon</button>
+    </div>
+
+    <div class="woocommerce-message" id="success-message">
+      Coupon code applied successfully.
+    </div>
+
+    <div class="woocommerce-error" id="error-message">
+      Coupon "CODE" does not exist!
+    </div>
+
+    <div class="cart_totals">
+      <h2>Cart totals</h2>
+      <table>
+        <tbody>
+          <tr class="cart-subtotal">
+            <th>Subtotal</th>
+            <td><span class="amount">$200.00</span></td>
+          </tr>
+
+          <tr class="cart-discount" id="discount-row">
+            <th>Coupon: <span id="coupon-name"></span></th>
+            <td><span class="amount" id="discount-value">-$0.00</span></td>
+          </tr>
+
+          <tr class="shipping">
+            <th>Shipping</th>
+            <td><span class="amount">$15.00</span></td>
+          </tr>
+
+          <tr class="order-total">
+            <th>Total</th>
+            <td><strong><span class="amount" id="order-total">$215.00</span></strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // Test coupons
+    const validCoupons = {
+      'WOO10': { discount: 20.00, description: '10% off' },
+      'WOO20': { discount: 40.00, description: '20% off' },
+      'FREESHIP': { discount: 15.00, description: 'Free shipping' },
+      'MEGA50': { discount: 100.00, description: '50% off' },
+    };
+
+    const applyButton = document.getElementById('apply_coupon');
+    const couponInput = document.getElementById('coupon_code');
+    const successMessage = document.getElementById('success-message');
+    const errorMessage = document.getElementById('error-message');
+    const orderTotalElement = document.getElementById('order-total');
+    const discountRow = document.getElementById('discount-row');
+    const discountValue = document.getElementById('discount-value');
+    const couponName = document.getElementById('coupon-name');
+
+    let currentDiscount = 0;
+    const baseTotal = 215.00;
+
+    applyButton.addEventListener('click', function() {
+      const code = couponInput.value.trim().toUpperCase();
+
+      // Clear previous messages
+      successMessage.classList.remove('show');
+      errorMessage.classList.remove('show');
+
+      if (!code) {
+        errorMessage.textContent = 'Please enter a coupon code.';
+        errorMessage.classList.add('show');
+        return;
+      }
+
+      // Simulate WooCommerce processing delay
+      applyButton.disabled = true;
+
+      setTimeout(() => {
+        if (validCoupons[code]) {
+          // Valid coupon
+          currentDiscount = validCoupons[code].discount;
+          const newTotal = baseTotal - currentDiscount;
+
+          couponName.textContent = code;
+          discountValue.textContent = `-$${currentDiscount.toFixed(2)}`;
+          discountRow.classList.add('active');
+          orderTotalElement.textContent = `$${newTotal.toFixed(2)}`;
+
+          successMessage.classList.add('show');
+        } else {
+          // Invalid coupon
+          errorMessage.textContent = `Coupon "${code}" does not exist!`;
+          errorMessage.classList.add('show');
+        }
+
+        applyButton.disabled = false;
+      }, 800);
+    });
+
+    // Support Enter key
+    couponInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        applyButton.click();
+      }
+    });
+  </script>
+</body>
+</html>
