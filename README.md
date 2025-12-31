@@ -15,7 +15,6 @@
   [![React](https://img.shields.io/badge/React-19.1-61dafb.svg)](https://reactjs.org/)
   [![Node](https://img.shields.io/badge/Node-20+-green.svg)](https://nodejs.org/)
   [![Tests](https://img.shields.io/badge/Tests-58%20Passing-success.svg)](https://github.com/EvgeniiKlepilin/open-coupon)
-  [![Security](https://img.shields.io/badge/Security-Hardened-brightgreen.svg)](https://github.com/EvgeniiKlepilin/open-coupon)
   [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/EvgeniiKlepilin/open-coupon/pulls)
 
   [Features](#-features) •
@@ -118,9 +117,10 @@ OpenCoupon is an **open-source framework** that lets you build your own browser 
    - The extension icon should appear in your toolbar!
 
 6. **Test it out**
-   - Visit any e-commerce site (e.g., Nike, Amazon)
+   - Seed the database with coupons for specific domains
+   - Visit any e-commerce sites for which you have created coupons
    - Navigate to checkout
-   - Click the OpenCoupon extension icon
+   - Click the OpenCoupon extension icon and Auto-Apply button
    - Watch it find and test coupons automatically! 🎉
 
 ---
@@ -191,7 +191,6 @@ OpenCoupon is an **open-source framework** that lets you build your own browser 
 
 **DevOps**
 - Docker & Docker Compose
-- GitHub Actions (ready for CI/CD)
 - ESLint + Prettier
 - Husky for pre-commit hooks
 </details>
@@ -200,39 +199,44 @@ OpenCoupon is an **open-source framework** that lets you build your own browser 
 
 ## 🏗️ Architecture
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                      Chrome Extension                        │
-├─────────────────────────────────────────────────────────────┤
-│  ┌─────────────┐  ┌──────────────┐  ┌──────────────────┐  │
-│  │   Popup UI  │  │   Content    │  │    Background    │  │
-│  │   (React)   │  │   Scripts    │  │  Service Worker  │  │
-│  └──────┬──────┘  └──────┬───────┘  └────────┬─────────┘  │
-│         │                 │                    │             │
-│         └─────────────────┴────────────────────┘             │
-│                           │                                  │
-│                    chrome.runtime                            │
-└───────────────────────────┼──────────────────────────────────┘
-                            │
-                    REST API (HTTP/JSON)
-                            │
-┌───────────────────────────┼──────────────────────────────────┐
-│                      Backend Server                          │
-├─────────────────────────────────────────────────────────────┤
-│  ┌─────────────┐  ┌──────────────┐  ┌──────────────────┐  │
-│  │   Routes    │──│ Controllers  │──│    Services      │  │
-│  │  (Express)  │  │ (Validation) │  │ (Business Logic) │  │
-│  └─────────────┘  └──────────────┘  └────────┬─────────┘  │
-│                                                │             │
-│                                         ┌──────┴─────────┐  │
-│                                         │  Prisma ORM    │  │
-│                                         └──────┬─────────┘  │
-└────────────────────────────────────────────────┼────────────┘
-                                                 │
-                                         ┌───────┴────────┐
-                                         │   PostgreSQL   │
-                                         │    Database    │
-                                         └────────────────┘
+```mermaid
+graph TB
+    subgraph Extension["Chrome Extension"]
+        Popup["Popup UI<br/>(React)"]
+        Content["Content Scripts<br/>(Auto-Apply Engine)"]
+        Background["Background Worker<br/>(Service Worker)"]
+
+        Popup <-->|chrome.runtime| Background
+        Popup -->|chrome.runtime| Content
+        Background -->|chrome.runtime| Content
+    end
+
+    subgraph Backend["Backend Server"]
+        Routes["Routes<br/>(Express)"]
+        Controllers["Controllers<br/>(Validation)"]
+        Services["Services<br/>(Business Logic)"]
+        Prisma["Prisma ORM"]
+
+        Routes --> Controllers
+        Controllers --> Services
+        Services --> Prisma
+    end
+
+    Database[("PostgreSQL<br/>Database")]
+
+    Extension -->|REST API<br/>HTTP/JSON| Backend
+    Prisma <--> Database
+
+    style Extension fill:#e3f2fd
+    style Backend fill:#fff3e0
+    style Database fill:#ffebee
+    style Popup fill:#bbdefb
+    style Content fill:#bbdefb
+    style Background fill:#bbdefb
+    style Routes fill:#ffe0b2
+    style Controllers fill:#ffe0b2
+    style Services fill:#ffe0b2
+    style Prisma fill:#ffe0b2
 ```
 
 ### Data Flow
@@ -321,9 +325,6 @@ NODE_ENV=development
 The project includes comprehensive test coverage:
 
 ```bash
-# Run all tests
-npm test
-
 # Backend tests (58 tests)
 cd server
 npm run test:unit         # Unit tests (services, utilities)
@@ -348,7 +349,7 @@ npm run test:coverage    # Generate coverage report
 
 ## 🤝 Contributing
 
-We welcome contributions from the community! Whether you're fixing bugs, adding features, or improving documentation, your help is appreciated.
+Contributions are welcome! Whether you're fixing bugs, adding features, or improving documentation, your help is appreciated.
 
 ### How to Contribute
 
@@ -391,7 +392,7 @@ We welcome contributions from the community! Whether you're fixing bugs, adding 
 
 - **Code Style**: Follow TypeScript best practices, use ESLint/Prettier
 - **Tests**: Add tests for new features, maintain >80% coverage
-- **Documentation**: Update READMEs and inline comments
+- **Documentation**: Where applicable, update READMEs and inline comments
 - **Commits**: Use clear, descriptive commit messages
 - **PRs**: One feature per PR, include screenshots for UI changes
 - **Issues**: Check existing issues before creating new ones
@@ -403,21 +404,18 @@ See [Quick Start](#-quick-start) for detailed setup instructions.
 ### Areas for Contribution
 
 🌟 **High Priority:**
-- Additional retailer-specific selectors
 - UI/UX improvements
 - Mobile browser support
 - Firefox extension port
-- Performance optimizations
 
 💡 **Feature Ideas:**
 - Multi-language support
 - Coupon expiry tracking
 - Browser sync across devices
-- Coupon sharing community
 - Analytics dashboard
+- Coupon and Retailer Management platform
 
 📝 **Documentation:**
-- Video tutorials
 - Architecture diagrams
 - API documentation
 - Deployment guides
@@ -436,8 +434,6 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 - Inspired by [Honey](https://www.joinhoney.com/) and other coupon extensions
 - Built with modern web technologies and best practices
-- Security review and hardening completed
-- Community-driven development
 
 ---
 
@@ -445,31 +441,13 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 - **Issues**: [GitHub Issues](https://github.com/EvgeniiKlepilin/open-coupon/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/EvgeniiKlepilin/open-coupon/discussions)
-- **Email**: evgeniiklepilin@example.com
-
----
-
-## 🗺️ Roadmap
-
-- [x] Core auto-apply functionality
-- [x] Feedback loop system
-- [x] Security hardening
-- [x] Comprehensive testing
-- [ ] Firefox extension support
-- [ ] Safari extension support
-- [ ] Mobile browser support
-- [ ] Public coupon database
-- [ ] Community coupon submissions
-- [ ] Analytics dashboard
-- [ ] Multi-language support
-- [ ] Deployment automation
 
 ---
 
 <div align="center">
   <p>
     <strong>Star ⭐ this repository if you find it useful!</strong><br/>
-    Built with ❤️ by the open-source community
+    Built with curiosity and ❤️
   </p>
 
   <p>

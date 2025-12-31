@@ -6,26 +6,27 @@ This directory contains the Chrome Extension frontend for OpenCoupon - a product
 
 The extension follows Chrome's **Manifest V3** standards and consists of four main components:
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    Chrome Extension                          │
-├─────────────────────────────────────────────────────────────┤
-│                                                               │
-│  ┌──────────────┐         ┌──────────────────────┐          │
-│  │   Popup UI   │◄────────┤  Background Worker   │          │
-│  │   (React)    │         │  (Service Worker)    │          │
-│  └──────┬───────┘         └──────────┬───────────┘          │
-│         │                             │                       │
-│         │                             │                       │
-│         │         ┌───────────────────▼────┐                 │
-│         └────────►│   Content Scripts      │                 │
-│                   │  (Auto-Apply Engine)   │                 │
-│                   └────────────────────────┘                 │
-│                                                               │
-└───────────────────────────────────────────────────────────────┘
-                            │
-                            ▼
-                     Backend API Server
+```mermaid
+graph TB
+    subgraph Extension["Chrome Extension"]
+        Popup["Popup UI<br/>(React)"]
+        Background["Background Worker<br/>(Service Worker)"]
+        Content["Content Scripts<br/>(Auto-Apply Engine)"]
+
+        Popup <-->|Messages| Background
+        Popup -->|Trigger| Content
+        Background -->|Process Queue| Content
+    end
+
+    API["Backend API Server"]
+
+    Content -->|Fetch Coupons<br/>Submit Feedback| API
+
+    style Extension fill:#e3f2fd
+    style Popup fill:#90caf9
+    style Background fill:#64b5f6
+    style Content fill:#42a5f5
+    style API fill:#fff3e0
 ```
 
 ### Component Breakdown
@@ -202,9 +203,9 @@ client/
    - The extension should appear in your toolbar
 
 5. **Test the extension**
-   - Visit any e-commerce checkout page (e.g., Nike, Amazon)
+   - Visit any e-commerce checkout page
    - Click the OpenCoupon icon in the toolbar
-   - Click "Find Coupons" to test auto-apply
+   - Click "Auto-Apply Coupons" to test auto-apply
 
 ### Development Commands
 
@@ -226,9 +227,6 @@ npm run test:coverage
 
 # Lint code
 npm run lint
-
-# Type check
-npm run type-check
 ```
 
 ### Hot Reload
@@ -325,9 +323,6 @@ Test the full auto-apply flow in a simulated environment.
 ```bash
 # Run all tests
 npm test
-
-# Watch mode
-npm run test:watch
 
 # Coverage report
 npm run test:coverage
@@ -444,9 +439,8 @@ We welcome contributions to improve the extension!
 
 ### Contribution Areas
 
-- **Retailer Selectors**: Add site-specific selectors in `detector.ts`
 - **UI/UX Improvements**: Enhance popup and overlay components
-- **Performance**: Optimize detection and auto-apply speed
+- **More Advanced Coupon Field Detection**: Improve field detection algorithms and approaches
 - **Testing**: Add test coverage for new features
 - **Documentation**: Improve inline comments and guides
 
