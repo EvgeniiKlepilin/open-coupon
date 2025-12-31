@@ -183,8 +183,8 @@ export default function AutoApplyResult({ result, onClose }: AutoApplyResultProp
               textAlign: 'center',
             }}
           >
-            We tested {result.tested} coupon{result.tested !== 1 ? 's' : ''}, but none of them
-            worked for this purchase.
+            We tested {result.tested} coupon{result.tested !== 1 ? 's' : ''}, but none provided
+            a discount for this purchase.
           </p>
           <div
             style={{
@@ -193,7 +193,7 @@ export default function AutoApplyResult({ result, onClose }: AutoApplyResultProp
               textAlign: 'center',
             }}
           >
-            {result.successful} succeeded · {result.failed} failed
+            All {result.tested} coupon{result.tested !== 1 ? 's' : ''} were invalid or expired
           </div>
         </>
       )}

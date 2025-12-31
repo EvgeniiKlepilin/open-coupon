@@ -654,12 +654,306 @@ The project is architected as a **Monorepo** containing two main services: `exte
     * 💡 **User Control:** Always provide cancel button. Never force auto-apply without user consent.
 
 ### Story 4.3: Feedback Loop API
-* **Description:** Report which coupon worked back to the server.
-* **AI Instructions:**
-    * Create Backend Endpoint `POST /api/v1/coupons/:id/feedback`.
-    * Body: `{ success: boolean }`.
-    * Logic: Update `successCount` or `failureCount` in DB.
-    * Frontend: After `applyCoupons` finishes, identify the code that gave the lowest price. Call this API endpoint.
+* **Description:** Implement a bidirectional feedback system that reports coupon test results back to the server, enabling the platform to learn which coupons are working and improve recommendations over time. This creates a crowdsourced intelligence layer that benefits all users.
+* **Implementation Requirements:**
+    * **Backend API Endpoint:**
+        * **Route:** `POST /api/v1/coupons/:id/feedback`
+        * **Authentication:** Optional for MVP (can add API key or user tokens later)
+        * **Rate Limiting:** Max 100 requests per IP per hour to prevent abuse
+        * **Request Validation:**
+            * Validate `:id` is valid UUID format
+            * Validate coupon exists in database before accepting feedback
+            * Validate request body against schema (Zod/Joi)
+            * Reject requests with invalid or missing required fields
+        * **Business Logic:**
+            * Increment `successCount` if `success: true`
+            * Increment `failureCount` if `success: false`
+            * Update `lastSuccessAt` timestamp if successful
+            * Update `lastTestedAt` timestamp regardless of outcome
+            * Calculate and store success rate percentage: `(successCount / (successCount + failureCount)) * 100`
+            * Implement atomic updates (use database transactions to prevent race conditions)
+        * **Response Format:**
+            * Success: `{ success: true, message: "Feedback recorded", updatedCoupon: { id, successCount, failureCount, successRate } }`
+            * Error: `{ success: false, error: "Error message" }`
+        * **Database Considerations:**
+            * Use optimistic locking or database-level atomic increments (`prisma.coupon.update({ data: { successCount: { increment: 1 } } })`)
+            * Index on `successCount` and `lastSuccessAt` for efficient sorting
+            * Consider archiving coupons with `failureCount > 50` and `successCount === 0`
+    * **Batch Feedback Endpoint (Optional Enhancement):**
+        * **Route:** `POST /api/v1/coupons/feedback/batch`
+        * **Purpose:** Allow extension to send feedback for multiple coupons in single request
+        * **Body:** `{ feedback: Array<{ couponId: string, success: boolean, metadata?: object }> }`
+        * **Benefits:** Reduces network requests, better for auto-apply loops testing 10+ coupons
+    * **Frontend Integration:**
+        * **When to Send Feedback:**
+            * After auto-apply loop completes (Story 4.2)
+            * Send feedback for ALL tested coupons, not just successful ones
+            * Include timestamp of test for analytics
+        * **What to Send:**
+            * Coupon ID (from API response)
+            * Success/failure boolean
+            * Optional metadata:
+                * Discount amount achieved (if successful)
+                * Failure reason (if detected: "expired", "invalid", "minimum not met")
+                * Retailer domain
+                * Test duration (time to get result)
+        * **Error Handling:**
+            * If feedback API fails, store in local queue (`chrome.storage.local`)
+            * Retry failed feedback submissions on next extension startup
+            * Max retry attempts: 3 per feedback item
+            * Clear queue after 7 days (don't persist stale data)
+        * **Privacy Considerations:**
+            * NEVER send user's cart contents, prices, or personal information
+            * Only send: coupon ID, success boolean, optional anonymous metadata
+            * Don't include user IP or identifying information beyond what's in HTTP headers
+            * Comply with privacy-first approach (user should be able to disable feedback in settings)
+        * **User Control:**
+            * Add setting in extension: "Help improve coupon recommendations" (toggle, default ON)
+            * If disabled, skip all feedback API calls
+            * Show user value proposition: "Anonymous usage data helps find working coupons faster"
+    * **Module Architecture:**
+        * **Backend:**
+            * `server/src/routes/coupon.routes.ts` - Define feedback endpoint route
+            * `server/src/controllers/coupon.controller.ts` - Handle request validation and response
+            * `server/src/services/coupon.service.ts` - Business logic for updating counts
+            * `server/src/middleware/rateLimiter.ts` - Rate limiting middleware
+            * `server/src/validators/feedback.validator.ts` - Zod/Joi schema validation
+        * **Frontend:**
+            * `client/src/services/feedback.service.ts` - API client for sending feedback
+            * `client/src/utils/feedbackQueue.ts` - Queue management for failed requests
+            * `client/src/background/feedbackWorker.ts` - Background service for retry logic
+    * **TypeScript Interfaces:**
+        ```typescript
+        // Shared types (both frontend and backend)
+        interface FeedbackRequest {
+          success: boolean;
+          metadata?: {
+            discountAmount?: number;      // Only if successful
+            discountPercentage?: number;  // Only if successful
+            failureReason?: 'expired' | 'invalid' | 'minimum-not-met' | 'out-of-stock' | 'other';
+            domain: string;               // Retailer domain for analytics
+            testDurationMs: number;       // How long test took
+            detectionMethod: 'price-change' | 'success-message' | 'failure-message' | 'timeout';
+            testedAt: string;             // ISO timestamp
+          };
+        }
+
+        interface FeedbackResponse {
+          success: true;
+          message: string;
+          updatedCoupon: {
+            id: string;
+            successCount: number;
+            failureCount: number;
+            successRate: number;          // Calculated percentage
+            lastSuccessAt?: string;
+            lastTestedAt: string;
+          };
+        }
+
+        interface FeedbackError {
+          success: false;
+          error: string;
+          code?: 'COUPON_NOT_FOUND' | 'INVALID_REQUEST' | 'RATE_LIMITED' | 'SERVER_ERROR';
+        }
+
+        // Batch feedback types
+        interface BatchFeedbackRequest {
+          feedback: Array<{
+            couponId: string;
+            success: boolean;
+            metadata?: FeedbackRequest['metadata'];
+          }>;
+        }
+
+        interface BatchFeedbackResponse {
+          success: true;
+          message: string;
+          processed: number;
+          failed: number;
+          results: Array<{
+            couponId: string;
+            success: boolean;
+            error?: string;
+          }>;
+        }
+
+        // Frontend queue types
+        interface QueuedFeedback {
+          couponId: string;
+          feedback: FeedbackRequest;
+          attempts: number;
+          createdAt: number;            // Timestamp
+          lastAttemptAt?: number;
+        }
+        ```
+* **Error Handling:**
+    * **Backend:**
+        * Return 404 if coupon ID not found in database
+        * Return 400 for invalid request body or malformed UUID
+        * Return 429 for rate limit exceeded (with `Retry-After` header)
+        * Return 500 for database errors (log internally, don't expose details)
+        * Use centralized error handler middleware
+    * **Frontend:**
+        * Catch network errors (offline, timeout, DNS failure)
+        * Handle 404: Coupon may have been deleted, remove from queue
+        * Handle 429: Implement exponential backoff, retry after delay
+        * Handle 500: Queue for retry with exponential backoff
+        * Log errors to extension console for debugging (use `console.warn`)
+    * **Queue Management:**
+        * Store failed feedback in `chrome.storage.local` under key `feedbackQueue`
+        * Structure: `{ queue: QueuedFeedback[], lastProcessedAt: number }`
+        * Process queue on extension startup and every 5 minutes (background worker)
+        * Remove items after 3 failed attempts or 7 days old
+        * Max queue size: 100 items (FIFO eviction if exceeded)
+* **Performance & Optimization:**
+    * **Backend:**
+        * Use database connection pooling (Prisma default)
+        * Add index on `coupon.id` (primary key, already indexed)
+        * Use `SELECT FOR UPDATE` or atomic increments to prevent race conditions
+        * Consider caching success rates in Redis for high-traffic scenarios (future)
+        * Log slow queries (>100ms) for optimization
+    * **Frontend:**
+        * Batch feedback when possible (send all results from auto-apply in one request)
+        * Debounce feedback submissions (don't send immediately, wait 2 seconds)
+        * Use `navigator.sendBeacon()` for fire-and-forget feedback on extension unload
+        * Compress request payload for batch feedback (gzip if >1KB)
+    * **Rate Limiting Strategy:**
+        * Backend: 100 requests/hour per IP (configurable via env var)
+        * Frontend: Max 1 batch request per domain per 5 minutes
+        * Implement client-side rate limit cache to avoid unnecessary API calls
+* **Security Considerations:**
+    * **Input Validation:**
+        * Sanitize all input fields (prevent NoSQL injection if using MongoDB, SQL injection if using raw queries)
+        * Validate UUID format using regex or library
+        * Limit metadata object size (max 1KB JSON)
+        * Reject requests with suspicious patterns (e.g., rapid-fire from same IP)
+    * **Anti-Abuse:**
+        * Implement CAPTCHA for IPs exceeding rate limits repeatedly
+        * Block IPs with malicious patterns (e.g., trying to SQL inject)
+        * Log all feedback submissions for audit trail
+        * Consider implementing request signing (HMAC) to verify requests from official extension
+    * **Privacy:**
+        * Don't log user IP addresses in application logs (only in web server access logs)
+        * Anonymize metadata before storing (strip any PII accidentally included)
+        * Provide clear privacy policy about what data is collected
+        * Allow users to opt-out via extension settings
+* **Analytics & Monitoring:**
+    * **Metrics to Track:**
+        * Total feedback submissions per day
+        * Success vs failure ratio across all coupons
+        * Top performing coupons (highest success rate)
+        * Worst performing coupons (candidates for removal)
+        * Average time between last test and last success (freshness metric)
+        * Number of coupons tested per domain
+    * **Alerting:**
+        * Alert if feedback API error rate >10%
+        * Alert if database write latency >500ms
+        * Alert if rate limiting is triggered >100 times/hour (potential attack)
+    * **Dashboards:**
+        * Create admin dashboard showing coupon performance metrics
+        * Display trend graphs: success rate over time per retailer
+        * Show "stale" coupons (not tested in 30+ days) for review
+* **Acceptance Criteria:**
+    * ✅ Backend endpoint `POST /api/v1/coupons/:id/feedback` successfully updates coupon counts
+    * ✅ `successCount` increments when `success: true` sent
+    * ✅ `failureCount` increments when `success: false` sent
+    * ✅ `lastSuccessAt` updates to current timestamp on successful feedback
+    * ✅ `lastTestedAt` updates on every feedback submission
+    * ✅ Returns 404 when coupon ID doesn't exist
+    * ✅ Returns 400 when request body is invalid
+    * ✅ Returns 429 when rate limit exceeded (with appropriate headers)
+    * ✅ Frontend sends feedback for all tested coupons after auto-apply completes
+    * ✅ Failed feedback requests are queued in `chrome.storage.local`
+    * ✅ Queued feedback retries on next extension startup
+    * ✅ Queue items are removed after 3 failed attempts or 7 days
+    * ✅ User can disable feedback submission via extension settings
+    * ✅ No sensitive user data (prices, cart contents, PII) is sent to server
+    * ✅ Batch feedback endpoint processes multiple coupons in single request
+    * ✅ Database updates are atomic (no race conditions on concurrent requests)
+    * ✅ Rate limiting prevents abuse (100 requests/hour per IP)
+* **Testing:**
+    * **Backend Unit Tests (Jest + Supertest):**
+        * **Endpoint Tests:**
+            * Test `POST /api/v1/coupons/:id/feedback` with valid success feedback increments `successCount`
+            * Test with valid failure feedback increments `failureCount`
+            * Test with success feedback updates `lastSuccessAt` timestamp
+            * Test with any feedback updates `lastTestedAt` timestamp
+            * Test with non-existent coupon ID returns 404
+            * Test with invalid UUID format returns 400
+            * Test with missing request body returns 400
+            * Test with malformed JSON returns 400
+        * **Validation Tests:**
+            * Test Zod/Joi schema rejects invalid `success` field (non-boolean)
+            * Test schema accepts optional `metadata` object
+            * Test schema rejects metadata exceeding size limit (>1KB)
+        * **Rate Limiting Tests:**
+            * Test 101st request within 1 hour returns 429
+            * Test `Retry-After` header is present in 429 response
+            * Test rate limit resets after time window expires
+        * **Database Tests:**
+            * Mock Prisma client to verify correct update queries
+            * Test atomic increment operations (no race conditions)
+            * Test transaction rollback on database error
+    * **Backend Integration Tests:**
+        * Seed database with test coupon (id: `test-coupon-123`, successCount: 5, failureCount: 2)
+        * Send success feedback, verify count becomes 6
+        * Send failure feedback, verify count becomes 3
+        * Send 100 requests rapidly, verify 101st is rate limited
+        * Test batch endpoint with 10 feedback items, verify all processed
+    * **Frontend Unit Tests (Jest + React Testing Library):**
+        * **Feedback Service Tests:**
+            * Mock `fetch` API, test `sendFeedback()` calls correct endpoint with correct payload
+            * Test successful response (200) resolves promise
+            * Test network error rejects promise
+            * Test 429 response triggers exponential backoff
+        * **Queue Management Tests:**
+            * Mock `chrome.storage.local`, test failed feedback is queued
+            * Test queue retrieval returns all queued items
+            * Test queue processing retries failed items
+            * Test items removed from queue after 3 attempts
+            * Test items removed from queue if older than 7 days
+            * Test queue max size (100 items) with FIFO eviction
+        * **Background Worker Tests:**
+            * Mock `chrome.alarms` API for periodic queue processing
+            * Test worker processes queue on extension startup
+            * Test worker processes queue every 5 minutes
+            * Test worker handles empty queue gracefully
+    * **Frontend Integration Tests (E2E):**
+        * **Scenario 1: Successful feedback submission**
+            * Complete auto-apply loop with 3 coupons (2 success, 1 fail)
+            * Verify 3 feedback requests sent to API
+            * Verify 2 with `success: true`, 1 with `success: false`
+            * Verify queue is empty after successful submission
+        * **Scenario 2: Failed feedback with retry**
+            * Mock API to return 500 error
+            * Complete auto-apply loop with 1 coupon
+            * Verify feedback queued in `chrome.storage.local`
+            * Verify retry attempted on next startup
+            * Mock API to return 200 on retry
+            * Verify queue cleared after successful retry
+        * **Scenario 3: Rate limiting**
+            * Send 100 feedback requests rapidly
+            * Mock API to return 429 on 101st request
+            * Verify exponential backoff implemented
+            * Verify request queued for later retry
+        * **Scenario 4: User opt-out**
+            * Disable feedback in extension settings
+            * Complete auto-apply loop
+            * Verify NO feedback requests sent
+            * Verify queue remains empty
+        * **Scenario 5: Batch feedback**
+            * Complete auto-apply loop with 10 coupons
+            * Verify single batch request sent with all 10 feedback items
+            * Verify individual feedback not sent
+* **Future Enhancements (Out of Scope for MVP):**
+    * 🔮 **User Accounts:** Tie feedback to authenticated users for personalized recommendations
+    * 🔮 **Machine Learning:** Analyze feedback patterns to predict coupon expiry dates
+    * 🔮 **Reputation System:** Weight feedback from "trusted" users more heavily (based on accuracy history)
+    * 🔮 **Real-time Updates:** Use WebSockets to push newly validated coupons to active users
+    * 🔮 **A/B Testing:** Test different coupon sorting algorithms based on feedback data
+    * 🔮 **Fraud Detection:** Use ML to detect fake feedback submissions (bots, competitors)
+    * 🔮 **Coupon Health Score:** Combine success rate, recency, and test volume into single metric
 
 ---
 

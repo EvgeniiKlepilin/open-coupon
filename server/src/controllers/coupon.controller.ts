@@ -5,7 +5,9 @@
 
 import type { Request, Response, NextFunction } from 'express';
 import { getCouponsByDomain } from '../services/coupon.service.ts';
+import { recordCouponFeedback, recordBatchCouponFeedback, calculateSuccessRate } from '../services/feedback.service.ts';
 import { BadRequestError } from '../lib/errors.ts';
+import { feedbackRequestSchema, batchFeedbackRequestSchema } from '../validators/feedback.validator.ts';
 
 /**
  * GET /api/v1/coupons
@@ -30,6 +32,100 @@ export async function getCoupons(req: Request, res: Response, next: NextFunction
     // Return successful response
     res.status(200).json({
       data: coupons,
+    });
+  } catch (error) {
+    // Pass error to error handling middleware
+    next(error);
+  }
+}
+
+/**
+ * POST /api/v1/coupons/:id/feedback
+ * Record feedback for a specific coupon
+ *
+ * @param req - Express request object with coupon ID in params and feedback data in body
+ * @param res - Express response object
+ * @param next - Express next function for error handling
+ */
+export async function submitCouponFeedback(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { id: couponId } = req.params;
+
+    // Validate request body using Zod
+    const validationResult = feedbackRequestSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      const errorMessages = validationResult.error.errors
+        .map(e => {
+          const path = e.path.length > 0 ? `${e.path.join('.')}: ` : '';
+          return `${path}${e.message}`;
+        })
+        .join(', ');
+      throw new BadRequestError(`Invalid request body: ${errorMessages}`);
+    }
+    const validatedData = validationResult.data;
+
+    const { success, metadata } = validatedData;
+
+    // Record feedback in database
+    const updatedCoupon = await recordCouponFeedback(couponId, success, metadata);
+
+    // Calculate success rate
+    const successRate = calculateSuccessRate(updatedCoupon.successCount, updatedCoupon.failureCount);
+
+    // Return successful response
+    res.status(200).json({
+      success: true,
+      message: 'Feedback recorded successfully',
+      updatedCoupon: {
+        id: updatedCoupon.id,
+        successCount: updatedCoupon.successCount,
+        failureCount: updatedCoupon.failureCount,
+        successRate,
+        lastSuccessAt: updatedCoupon.lastSuccessAt?.toISOString(),
+        lastTestedAt: updatedCoupon.lastTestedAt?.toISOString() || new Date().toISOString(),
+      },
+    });
+  } catch (error) {
+    // Pass error to error handling middleware
+    next(error);
+  }
+}
+
+/**
+ * POST /api/v1/coupons/feedback/batch
+ * Record feedback for multiple coupons in a single request
+ *
+ * @param req - Express request object with array of feedback items in body
+ * @param res - Express response object
+ * @param next - Express next function for error handling
+ */
+export async function submitBatchCouponFeedback(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    // Validate request body using Zod
+    const validationResult = batchFeedbackRequestSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      const errorMessages = validationResult.error.errors
+        .map(e => {
+          const path = e.path.length > 0 ? `${e.path.join('.')}: ` : '';
+          return `${path}${e.message}`;
+        })
+        .join(', ');
+      throw new BadRequestError(`Invalid request body: ${errorMessages}`);
+    }
+    const validatedData = validationResult.data;
+
+    const { feedback } = validatedData;
+
+    // Record batch feedback in database
+    const result = await recordBatchCouponFeedback(feedback);
+
+    // Return successful response
+    res.status(200).json({
+      success: true,
+      message: `Processed ${result.processed} feedback items, ${result.failed} failed`,
+      processed: result.processed,
+      failed: result.failed,
+      results: result.results,
     });
   } catch (error) {
     // Pass error to error handling middleware

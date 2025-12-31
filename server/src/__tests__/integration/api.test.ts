@@ -181,9 +181,8 @@ describe('API Integration Tests', () => {
 
       expect(response.status).toBe(404);
       expect(response.body).toHaveProperty('error');
-      expect(response.body.error).toHaveProperty('message');
-      expect(response.body.error.message).toContain('No retailer found');
-      expect(response.body.error.statusCode).toBe(404);
+      expect(response.body.error).toContain('No retailer found');
+      expect(response.body.success).toBe(false);
     });
 
     it('should return 404 for inactive retailer', async () => {
@@ -191,8 +190,8 @@ describe('API Integration Tests', () => {
 
       expect(response.status).toBe(404);
       expect(response.body).toHaveProperty('error');
-      expect(response.body.error.message).toContain('Retailer is not active');
-      expect(response.body.error.statusCode).toBe(404);
+      expect(response.body.error).toContain('Retailer is not active');
+      expect(response.body.success).toBe(false);
     });
 
     it('should return 400 when domain parameter is missing', async () => {
@@ -200,9 +199,9 @@ describe('API Integration Tests', () => {
 
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('error');
-      expect(response.body.error.message).toContain('domain');
-      expect(response.body.error.message).toContain('required');
-      expect(response.body.error.statusCode).toBe(400);
+      expect(response.body.error).toContain('domain');
+      expect(response.body.error).toContain('required');
+      expect(response.body.success).toBe(false);
     });
 
     it('should return 400 when domain parameter is empty', async () => {
@@ -246,7 +245,8 @@ describe('API Integration Tests', () => {
 
       expect(response.status).toBe(404);
       expect(response.body).toHaveProperty('error');
-      expect(response.body.error.message).toContain('not found');
+      expect(response.body.error).toContain('not found');
+      expect(response.body.success).toBe(false);
     });
   });
 

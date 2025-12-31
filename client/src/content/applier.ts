@@ -333,7 +333,36 @@ export async function waitForPriceChange(
     const container = document.querySelector('main, [role="main"], .checkout, .cart, body') || document.body;
 
     const checkPrice = async (): Promise<void> => {
-      const newPrice = await detectPrice();
+      // CRITICAL FIX: Always check the SAME element that was used for baseline price
+      // This prevents false positives from different price elements appearing/disappearing
+      let newPrice: PriceInfo | null = null;
+
+      if (basePrice.element && document.contains(basePrice.element)) {
+        // Check if baseline element still exists and is visible
+        const style = window.getComputedStyle(basePrice.element);
+        if (style.display !== 'none' && style.visibility !== 'hidden') {
+          const text = basePrice.element.textContent?.trim() || '';
+          const value = normalizePrice(text);
+          if (value > 0) {
+            newPrice = {
+              value,
+              rawText: text,
+              currency: detectCurrency(text),
+              element: basePrice.element,
+              detectedAt: Date.now(),
+            };
+            console.debug(`Price checked from baseline element: ${value} (was ${basePrice.value})`);
+          }
+        }
+      }
+
+      // Fallback: If baseline element is gone or invalid, scan for any price
+      if (!newPrice) {
+        newPrice = await detectPrice();
+        if (newPrice) {
+          console.debug(`⚠️  Baseline element lost, found new price element: ${newPrice.value}`);
+        }
+      }
 
       if (!newPrice) {
         console.debug('Price detection failed during wait');
@@ -526,7 +555,7 @@ export async function autoApplyCoupons(options: ApplierOptions): Promise<Applier
       let testResult: CouponTestResult;
 
       if (newPrice && newPrice.value < baselinePrice.value) {
-        // Price decreased - SUCCESS
+        // Price decreased - SUCCESS (actual discount applied)
         const discountAmount = baselinePrice.value - newPrice.value;
         const discountPercentage = (discountAmount / baselinePrice.value) * 100;
 
@@ -546,8 +575,9 @@ export async function autoApplyCoupons(options: ApplierOptions): Promise<Applier
         consecutiveFailures = 0;
 
         console.debug(`✅ SUCCESS: Saved ${newPrice.currency}${discountAmount.toFixed(2)} (${discountPercentage.toFixed(1)}%)`);
-      } else if (indicators.success) {
-        // Success message detected but no price change
+      } else if (indicators.success && (!newPrice || newPrice.value >= baselinePrice.value)) {
+        // Success message detected but NO price change - this is misleading, mark as FAILURE
+        // Some sites show "success" messages even for invalid coupons
         testResult = {
           couponId: coupon.id,
           code: coupon.code,
@@ -555,15 +585,16 @@ export async function autoApplyCoupons(options: ApplierOptions): Promise<Applier
           priceAfter: newPrice || baselinePrice,
           discountAmount: 0,
           discountPercentage: 0,
-          success: true,
+          success: false,
+          failureReason: 'No discount applied despite success message',
           detectionMethod: 'success-message',
           durationMs: Date.now() - startTime,
         };
 
-        result.successful++;
-        consecutiveFailures = 0;
+        result.failed++;
+        consecutiveFailures++;
 
-        console.debug(`✅ SUCCESS (message): ${indicators.message}`);
+        console.debug(`❌ MISLEADING SUCCESS: Success message shown but no price decrease (${indicators.message})`);
       } else if (indicators.message) {
         // Failure message detected
         testResult = {

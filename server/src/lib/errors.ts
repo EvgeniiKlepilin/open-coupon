@@ -44,6 +44,16 @@ export class BadRequestError extends AppError {
 }
 
 /**
+ * 429 Too Many Requests Error
+ */
+export class TooManyRequestsError extends AppError {
+  constructor(message = 'Too many requests') {
+    super(message, 429);
+    Object.setPrototypeOf(this, TooManyRequestsError.prototype);
+  }
+}
+
+/**
  * 500 Internal Server Error
  */
 export class InternalServerError extends AppError {

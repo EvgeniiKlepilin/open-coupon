@@ -2,6 +2,8 @@ import { createRoot } from 'react-dom/client';
 import { StrictMode } from 'react';
 import { findCouponElements } from './detector';
 import { autoApplyCoupons } from './applier';
+import { submitAutoApplyFeedback } from './feedbackIntegration';
+import { extractHostname } from '@/services/api';
 import AutoApplyOverlay from './components/AutoApplyOverlay';
 import AutoApplyResult from './components/AutoApplyResult';
 import type { Coupon, ApplierResult, CouponTestResult } from '@/types';
@@ -150,6 +152,20 @@ export default class AutoApplyManager {
 
       // Step 3: Show result
       this.showResult(result);
+
+      // Step 4: Submit feedback (async, don't block completion)
+      const hostname = extractHostname(window.location.href);
+      if (hostname && result.allResults.length > 0) {
+        submitAutoApplyFeedback(result, hostname)
+          .then((count) => {
+            if (count > 0) {
+              console.log(`[OpenCoupon] Successfully submitted feedback for ${count} coupons`);
+            }
+          })
+          .catch((error) => {
+            console.error('[OpenCoupon] Failed to submit feedback:', error);
+          });
+      }
 
       return result;
     } catch (error) {

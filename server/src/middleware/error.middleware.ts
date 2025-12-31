@@ -10,11 +10,9 @@ import { AppError } from '../lib/errors.ts';
  * Error response structure
  */
 interface ErrorResponse {
-  error: {
-    message: string;
-    statusCode: number;
-    stack?: string;
-  };
+  success: false;
+  error: string;
+  stack?: string;
 }
 
 /**
@@ -38,25 +36,16 @@ export function errorHandler(
   let message = 'Internal Server Error';
 
   // If it's an operational error we defined, use its properties
-  if (err instanceof AppError) {
+  // Check for statusCode property first (more reliable than instanceof in some environments)
+  if ('statusCode' in err && typeof (err as any).statusCode === 'number') {
+    statusCode = (err as any).statusCode;
+    message = err.message;
+  } else if (err instanceof AppError) {
     statusCode = err.statusCode;
     message = err.message;
   } else if (err instanceof Error) {
     // For standard errors, use the message but keep 500 status
     message = err.message;
-  }
-
-  // Build error response
-  const errorResponse: ErrorResponse = {
-    error: {
-      message,
-      statusCode,
-    },
-  };
-
-  // Include stack trace in development mode only
-  if (process.env.NODE_ENV === 'development' && err.stack) {
-    errorResponse.error.stack = err.stack;
   }
 
   // Log error for debugging
@@ -67,6 +56,17 @@ export function errorHandler(
     path: req.path,
     method: req.method,
   });
+
+  // Build error response with flat structure
+  const errorResponse: any = {
+    success: false,
+    error: message,
+  };
+
+  // Include stack trace in development mode only
+  if (process.env.NODE_ENV === 'development' && err.stack) {
+    errorResponse.stack = err.stack;
+  }
 
   // Send error response
   res.status(statusCode).json(errorResponse);
@@ -81,9 +81,7 @@ export function errorHandler(
  */
 export function notFoundHandler(req: Request, res: Response): void {
   res.status(404).json({
-    error: {
-      message: `Route ${req.method} ${req.path} not found`,
-      statusCode: 404,
-    },
+    success: false,
+    error: `Route ${req.method} ${req.path} not found`,
   });
 }

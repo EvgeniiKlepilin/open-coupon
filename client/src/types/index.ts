@@ -109,3 +109,70 @@ export interface ApplierOptions {
   onComplete?: (result: ApplierResult) => void;
   onCancel?: () => void;
 }
+
+// Feedback types
+export type FailureReason = 'expired' | 'invalid' | 'minimum-not-met' | 'out-of-stock' | 'other';
+
+export interface FeedbackMetadata {
+  discountAmount?: number;
+  discountPercentage?: number;
+  failureReason?: FailureReason;
+  domain: string;
+  testDurationMs: number;
+  detectionMethod: DetectionMethodType;
+  testedAt: string;
+}
+
+export interface FeedbackRequest {
+  success: boolean;
+  metadata?: FeedbackMetadata;
+}
+
+export interface FeedbackResponse {
+  success: true;
+  message: string;
+  updatedCoupon: {
+    id: string;
+    successCount: number;
+    failureCount: number;
+    successRate: number;
+    lastSuccessAt?: string;
+    lastTestedAt: string;
+  };
+}
+
+export interface FeedbackError {
+  success: false;
+  error: string;
+  code?: 'COUPON_NOT_FOUND' | 'INVALID_REQUEST' | 'RATE_LIMITED' | 'SERVER_ERROR';
+}
+
+export interface BatchFeedbackItem {
+  couponId: string;
+  success: boolean;
+  metadata?: FeedbackMetadata;
+}
+
+export interface BatchFeedbackRequest {
+  feedback: BatchFeedbackItem[];
+}
+
+export interface BatchFeedbackResponse {
+  success: true;
+  message: string;
+  processed: number;
+  failed: number;
+  results: Array<{
+    couponId: string;
+    success: boolean;
+    error?: string;
+  }>;
+}
+
+export interface QueuedFeedback {
+  couponId: string;
+  feedback: FeedbackRequest;
+  attempts: number;
+  createdAt: number;
+  lastAttemptAt?: number;
+}
