@@ -1,6 +1,7 @@
 import type { Coupon, CouponResponse, CacheEntry } from '@/types';
+import { getApiUrl } from '@/config';
+import { apiRateLimiter } from '@/utils/rateLimiter';
 
-const API_BASE_URL = 'http://localhost:3030/api/v1';
 const CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutes
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 1000;
@@ -121,8 +122,17 @@ export async function fetchCouponsForDomain(domain: string): Promise<Coupon[]> {
     return cachedData;
   }
 
-  // Fetch from API
-  const url = `${API_BASE_URL}/coupons?domain=${encodeURIComponent(domain)}`;
+  // Rate limiting: Check if we can make this request
+  try {
+    await apiRateLimiter.acquire();
+  } catch (error) {
+    console.warn('[API] Rate limit exceeded:', error);
+    throw error;
+  }
+
+  // Get API base URL from config
+  const apiBaseUrl = await getApiUrl();
+  const url = `${apiBaseUrl}/coupons?domain=${encodeURIComponent(domain)}`;
 
   try {
     const response = await fetchWithRetry(url);

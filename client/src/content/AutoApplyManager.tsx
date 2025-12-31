@@ -1,9 +1,16 @@
 import { createRoot } from 'react-dom/client';
+import type { Root } from 'react-dom/client';
 import { StrictMode } from 'react';
 import { findCouponElements } from './detector';
 import { autoApplyCoupons } from './applier';
 import { submitAutoApplyFeedback } from './feedbackIntegration';
 import { extractHostname } from '@/services/api';
+import {
+  isValidMessageSender,
+  isValidMessageStructure,
+  isValidCouponsArray,
+  sanitizeErrorMessage,
+} from '@/utils/security';
 import AutoApplyOverlay from './components/AutoApplyOverlay';
 import AutoApplyResult from './components/AutoApplyResult';
 import type { Coupon, ApplierResult, CouponTestResult } from '@/types';
@@ -20,8 +27,8 @@ import type { Coupon, ApplierResult, CouponTestResult } from '@/types';
 export default class AutoApplyManager {
   private overlayContainer: HTMLDivElement | null = null;
   private resultContainer: HTMLDivElement | null = null;
-  private overlayRoot: any = null;
-  private resultRoot: any = null;
+  private overlayRoot: Root | null = null;
+  private resultRoot: Root | null = null;
   private isRunning = false;
   private currentAbortController: AbortController | null = null;
 
@@ -50,14 +57,33 @@ export default class AutoApplyManager {
     this.renderResult(null);
 
     // Listen for messages from popup
-    chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+      // Security: Validate sender is from our extension
+      if (!isValidMessageSender(sender)) {
+        sendResponse({ success: false, error: 'Unauthorized sender' });
+        return true;
+      }
+
+      // Security: Validate message structure
+      if (!isValidMessageStructure(message)) {
+        sendResponse({ success: false, error: 'Invalid message format' });
+        return true;
+      }
+
       if (message.type === 'AUTO_APPLY_COUPONS') {
-        this.handleAutoApply(message.coupons)
+        // Security: Validate coupons array
+        const msg = message as { coupons?: unknown };
+        if (!isValidCouponsArray(msg.coupons)) {
+          sendResponse({ success: false, error: 'Invalid coupons data' });
+          return true;
+        }
+
+        this.handleAutoApply(msg.coupons as Coupon[])
           .then((result) => {
             sendResponse({ success: true, result });
           })
           .catch((error) => {
-            sendResponse({ success: false, error: error.message });
+            sendResponse({ success: false, error: sanitizeErrorMessage(error) });
           });
         return true; // Keep channel open for async response
       }
@@ -67,6 +93,10 @@ export default class AutoApplyManager {
         sendResponse({ success: true });
         return true;
       }
+
+      // Unknown message type
+      sendResponse({ success: false, error: 'Unknown message type' });
+      return true;
     });
 
     console.log('[OpenCoupon] AutoApplyManager initialized');

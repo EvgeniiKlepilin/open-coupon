@@ -11,8 +11,9 @@ import type {
   BatchFeedbackResponse,
   CouponTestResult,
 } from '@/types';
+import { getApiUrl } from '@/config';
+import { feedbackRateLimiter } from '@/utils/rateLimiter';
 
-const API_BASE_URL = 'http://localhost:3030/api/v1';
 const FEEDBACK_TIMEOUT_MS = 10000; // 10 seconds
 
 /**
@@ -25,7 +26,20 @@ export async function sendFeedback(
   couponId: string,
   feedback: FeedbackRequest
 ): Promise<FeedbackResponse | FeedbackError> {
-  const url = `${API_BASE_URL}/coupons/${couponId}/feedback`;
+  // Rate limiting
+  try {
+    await feedbackRateLimiter.acquire();
+  } catch (error) {
+    console.warn('[Feedback] Rate limit exceeded:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Rate limit exceeded',
+      code: 'RATE_LIMITED',
+    };
+  }
+
+  const apiBaseUrl = await getApiUrl();
+  const url = `${apiBaseUrl}/coupons/${couponId}/feedback`;
 
   try {
     const controller = new AbortController();
@@ -72,7 +86,20 @@ export async function sendFeedback(
 export async function sendBatchFeedback(
   feedbackItems: BatchFeedbackRequest['feedback']
 ): Promise<BatchFeedbackResponse | FeedbackError> {
-  const url = `${API_BASE_URL}/coupons/feedback/batch`;
+  // Rate limiting
+  try {
+    await feedbackRateLimiter.acquire();
+  } catch (error) {
+    console.warn('[Feedback] Rate limit exceeded:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Rate limit exceeded',
+      code: 'RATE_LIMITED',
+    };
+  }
+
+  const apiBaseUrl = await getApiUrl();
+  const url = `${apiBaseUrl}/coupons/feedback/batch`;
 
   try {
     const controller = new AbortController();

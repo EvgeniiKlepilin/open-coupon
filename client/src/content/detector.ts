@@ -1,4 +1,5 @@
 import type { DetectionResult, SelectorConfig, DetectorOptions } from '../types';
+import { isValidDOMElement } from '@/utils/security';
 
 // Default configuration
 const DEFAULT_KEYWORDS = [
@@ -18,10 +19,53 @@ const DEFAULT_OPTIONS: Required<DetectorOptions> = {
   retryDelay: 1000,
 };
 
-// Cache for detection results
-let detectionCache: DetectionResult | null = null;
-let cacheTimestamp = 0;
+// Cache configuration
 const CACHE_TTL = 60000; // 1 minute
+const CACHE_KEY_PREFIX = 'detection_cache_';
+
+/**
+ * Gets cached detection result from chrome.storage.session
+ * Avoids race conditions by using browser storage instead of module-level state
+ */
+async function getCachedResult(): Promise<DetectionResult | null> {
+  try {
+    const key = `${CACHE_KEY_PREFIX}${window.location.href}`;
+    const result = await chrome.storage.session.get(key);
+    const entry = result[key] as { data: DetectionResult; timestamp: number } | undefined;
+
+    if (!entry) {
+      return null;
+    }
+
+    // Check if cache is expired
+    if (Date.now() - entry.timestamp > CACHE_TTL) {
+      await chrome.storage.session.remove(key);
+      return null;
+    }
+
+    return entry.data;
+  } catch (error) {
+    console.warn('[Detector] Failed to read cache:', error);
+    return null;
+  }
+}
+
+/**
+ * Saves detection result to chrome.storage.session
+ */
+async function setCachedResult(data: DetectionResult): Promise<void> {
+  try {
+    const key = `${CACHE_KEY_PREFIX}${window.location.href}`;
+    await chrome.storage.session.set({
+      [key]: {
+        data,
+        timestamp: Date.now(),
+      },
+    });
+  } catch (error) {
+    console.warn('[Detector] Failed to save cache:', error);
+  }
+}
 
 /**
  * Main detection function that tries multiple strategies to find coupon input fields
@@ -33,11 +77,11 @@ export async function findCouponElements(
 ): Promise<DetectionResult> {
   const opts = { ...DEFAULT_OPTIONS, ...options };
 
-  // Check cache first
-  const now = Date.now();
-  if (detectionCache && now - cacheTimestamp < CACHE_TTL) {
+  // Check cache first (using chrome.storage.session to avoid race conditions)
+  const cachedResult = await getCachedResult();
+  if (cachedResult) {
     console.debug('[Detector] Returning cached result');
-    return detectionCache;
+    return cachedResult;
   }
 
   // Try retailer-specific selectors first (highest priority)
@@ -45,7 +89,7 @@ export async function findCouponElements(
     console.debug('[Detector] Trying retailer-specific selectors');
     const result = findByRetailerConfig(opts.selectorConfig);
     if (result && result.confidence >= 30) {
-      cacheResult(result);
+      await setCachedResult(result);
       return result;
     }
   }
@@ -54,7 +98,7 @@ export async function findCouponElements(
   console.debug('[Detector] Trying attribute-based detection');
   let result = findByAttributes(opts.keywords);
   if (result && result.confidence >= 30) {
-    cacheResult(result);
+    await setCachedResult(result);
     return result;
   }
 
@@ -62,7 +106,7 @@ export async function findCouponElements(
   console.debug('[Detector] Trying label-based detection');
   result = findByLabel(opts.keywords);
   if (result && result.confidence >= 30) {
-    cacheResult(result);
+    await setCachedResult(result);
     return result;
   }
 
@@ -74,14 +118,14 @@ export async function findCouponElements(
     // Retry attribute detection
     result = findByAttributes(opts.keywords);
     if (result && result.confidence >= 30) {
-      cacheResult(result);
+      await setCachedResult(result);
       return result;
     }
 
     // Retry label detection
     result = findByLabel(opts.keywords);
     if (result && result.confidence >= 30) {
-      cacheResult(result);
+      await setCachedResult(result);
       return result;
     }
   }
@@ -95,7 +139,7 @@ export async function findCouponElements(
   };
 
   console.debug('[Detector] No coupon field detected');
-  cacheResult(nullResult);
+  await setCachedResult(nullResult);
   return nullResult;
 }
 
@@ -108,28 +152,48 @@ export function findByRetailerConfig(
   config: SelectorConfig
 ): DetectionResult | null {
   try {
+    // Security: Validate selector and element before interaction
     const inputElement = config.input
-      ? (document.querySelector(config.input) as HTMLInputElement)
+      ? document.querySelector(config.input)
       : null;
 
-    if (!inputElement || !isElementValid(inputElement)) {
+    // Security: Validate element is safe to interact with
+    if (!inputElement || !isValidDOMElement(inputElement) || !isElementValid(inputElement)) {
+      return null;
+    }
+
+    // Type guard ensures it's HTMLInputElement
+    if (!(inputElement instanceof HTMLInputElement)) {
       return null;
     }
 
     const submitElement = config.submit
-      ? (document.querySelector(config.submit) as HTMLElement)
+      ? document.querySelector(config.submit)
       : findSubmitButton(inputElement);
 
+    // Security: Validate submit element
+    if (submitElement && !isValidDOMElement(submitElement)) {
+      return null;
+    }
+
     const containerElement = config.container
-      ? (document.querySelector(config.container) as HTMLElement)
-      : (inputElement.closest('form') as HTMLElement) || undefined;
+      ? document.querySelector(config.container)
+      : inputElement.closest('form');
+
+    // Security: Validate container element
+    if (containerElement && !isValidDOMElement(containerElement)) {
+      return null;
+    }
+
+    // Convert null to undefined for containerElement
+    const safeContainerElement = containerElement || undefined;
 
     return {
       inputElement,
       submitElement,
       confidence: 100,
       detectionMethod: 'retailer-specific',
-      containerElement,
+      containerElement: safeContainerElement,
     };
   } catch (error) {
     console.debug('[Detector] Error in retailer config detection:', error);
@@ -227,14 +291,22 @@ export function findByLabel(keywords: string[]): DetectionResult | null {
       let inputElement: HTMLInputElement | null = null;
 
       if (label.htmlFor) {
-        inputElement = document.getElementById(label.htmlFor) as HTMLInputElement;
+        const element = document.getElementById(label.htmlFor);
+        // Security: Validate element before using
+        if (element && isValidDOMElement(element) && element instanceof HTMLInputElement) {
+          inputElement = element;
+        }
       }
 
       // If not found, try to find input within the label
       if (!inputElement) {
-        inputElement = label.querySelector<HTMLInputElement>(
+        const element = label.querySelector<HTMLInputElement>(
           'input[type="text"], input[type="search"], input:not([type])'
         );
+        // Security: Validate element before using
+        if (element && isValidDOMElement(element)) {
+          inputElement = element;
+        }
       }
 
       // If still not found, try next sibling
@@ -437,15 +509,16 @@ function isElementVisible(element: HTMLElement): boolean {
  * Cache a detection result
  * @param result - The result to cache
  */
-function cacheResult(result: DetectionResult): void {
-  detectionCache = result;
-  cacheTimestamp = Date.now();
-}
+// Removed: Old synchronous cache function replaced with async setCachedResult
 
 /**
  * Clear the detection cache
  */
-export function clearCache(): void {
-  detectionCache = null;
-  cacheTimestamp = 0;
+export async function clearCache(): Promise<void> {
+  try {
+    const key = `${CACHE_KEY_PREFIX}${window.location.href}`;
+    await chrome.storage.session.remove(key);
+  } catch (error) {
+    console.warn('[Detector] Failed to clear cache:', error);
+  }
 }

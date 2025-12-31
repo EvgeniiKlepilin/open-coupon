@@ -4,6 +4,7 @@
  */
 
 import { processQueue, cleanupQueue } from '@/utils/feedbackQueue';
+import { isValidMessageSender, isValidMessageStructure } from '@/utils/security';
 
 /**
  * Sets up alarm for periodic queue processing
@@ -67,26 +68,53 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 /**
  * Handles messages from content scripts or popup
  */
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  // Security: Validate sender is from our extension
+  if (!isValidMessageSender(sender)) {
+    sendResponse({ success: false, error: 'Unauthorized sender' });
+    return true;
+  }
+
+  // Security: Validate message structure
+  if (!isValidMessageStructure(message)) {
+    sendResponse({ success: false, error: 'Invalid message format' });
+    return true;
+  }
+
   if (message.type === 'PROCESS_FEEDBACK_QUEUE') {
     // Allow manual queue processing trigger
-    processFeedbackQueue().then(() => {
-      sendResponse({ success: true });
-    });
+    processFeedbackQueue()
+      .then(() => {
+        sendResponse({ success: true });
+      })
+      .catch((error) => {
+        console.error('[Background] Queue processing failed:', error);
+        sendResponse({ success: false, error: 'Queue processing failed' });
+      });
     return true; // Keep message channel open for async response
   }
 
   if (message.type === 'GET_QUEUE_STATUS') {
     // Return queue status
-    chrome.storage.local.get('feedbackQueue').then((result) => {
-      const queueData = (result.feedbackQueue as { queue: unknown[]; lastProcessedAt: number } | undefined) || { queue: [], lastProcessedAt: 0 };
-      sendResponse({
-        queueSize: queueData.queue.length,
-        lastProcessedAt: queueData.lastProcessedAt,
+    chrome.storage.local.get('feedbackQueue')
+      .then((result) => {
+        const queueData = (result.feedbackQueue as { queue: unknown[]; lastProcessedAt: number } | undefined) || { queue: [], lastProcessedAt: 0 };
+        sendResponse({
+          success: true,
+          queueSize: queueData.queue.length,
+          lastProcessedAt: queueData.lastProcessedAt,
+        });
+      })
+      .catch((error) => {
+        console.error('[Background] Failed to get queue status:', error);
+        sendResponse({ success: false, error: 'Failed to get queue status' });
       });
-    });
     return true;
   }
+
+  // Unknown message type
+  sendResponse({ success: false, error: 'Unknown message type' });
+  return true;
 });
 
 console.debug('[Background] Service worker initialized');

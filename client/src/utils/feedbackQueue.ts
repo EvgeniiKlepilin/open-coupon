@@ -126,7 +126,10 @@ export async function cleanupQueue(): Promise<number> {
  * Processes the entire queue, attempting to send all queued feedback
  * @returns Object with counts of successful, failed, and skipped items
  */
-export async function processQueue(): Promise<{
+const MAX_QUEUE_PROCESS_ITEMS = 50; // Process max 50 items per run
+const ITEM_TIMEOUT_MS = 15000; // 15 seconds per item
+
+export async function processQueue(maxItems: number = MAX_QUEUE_PROCESS_ITEMS): Promise<{
   successful: number;
   failed: number;
   skipped: number;
@@ -144,42 +147,78 @@ export async function processQueue(): Promise<{
     const queueData = await getQueueData();
     const now = Date.now();
 
+    // Limit number of items to process
+    const itemsToProcess = queueData.queue.slice(0, maxItems);
+
     // Process each item
-    for (const item of queueData.queue) {
+    for (const item of itemsToProcess) {
       // Skip if max attempts reached
       if (item.attempts >= MAX_RETRY_ATTEMPTS) {
         results.skipped++;
         continue;
       }
 
-      // Attempt to send feedback
-      const response = await sendFeedback(item.couponId, item.feedback);
+      // Attempt to send feedback with timeout
+      try {
+        const response = await Promise.race([
+          sendFeedback(item.couponId, item.feedback),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('Request timeout')), ITEM_TIMEOUT_MS)
+          ),
+        ]);
 
-      if (response.success) {
-        // Success - remove from queue
+        if (!response || typeof response !== 'object') {
+          throw new Error('Invalid response');
+        }
+
+        const feedbackResponse = response as { success: boolean };
+
+        if (feedbackResponse.success) {
+          // Success - remove from queue
         await removeFromQueue(item.couponId);
         results.successful++;
         console.debug(`Successfully processed queued feedback for coupon ${item.couponId}`);
-      } else {
-        // Failed - increment attempt count
+        } else {
+          // Failed - increment attempt count
+          const updatedItem = {
+            ...item,
+            attempts: item.attempts + 1,
+            lastAttemptAt: now,
+          };
+
+          // If 404, coupon was deleted - remove from queue
+          const errorResponse = response as { success: boolean; code?: string };
+          if (errorResponse.code === 'COUPON_NOT_FOUND') {
+            await removeFromQueue(item.couponId);
+            results.skipped++;
+            console.debug(`Removing queued feedback for deleted coupon ${item.couponId}`);
+          } else if (updatedItem.attempts >= MAX_RETRY_ATTEMPTS) {
+            // Max attempts reached - remove from queue
+            await removeFromQueue(item.couponId);
+            results.failed++;
+            console.warn(`Max retry attempts reached for coupon ${item.couponId}`);
+          } else {
+            // Update queue with new attempt count
+            const updatedQueue = queueData.queue.map(q =>
+              q.couponId === item.couponId ? updatedItem : q
+            );
+            await saveQueueData({ ...queueData, queue: updatedQueue });
+            results.failed++;
+          }
+        }
+      } catch (error) {
+        // Timeout or error - increment attempt count
+        console.warn('[Queue] Failed to process item:', error);
         const updatedItem = {
           ...item,
           attempts: item.attempts + 1,
           lastAttemptAt: now,
         };
 
-        // If 404, coupon was deleted - remove from queue
-        if (response.code === 'COUPON_NOT_FOUND') {
-          await removeFromQueue(item.couponId);
-          results.skipped++;
-          console.debug(`Removing queued feedback for deleted coupon ${item.couponId}`);
-        } else if (updatedItem.attempts >= MAX_RETRY_ATTEMPTS) {
-          // Max attempts reached - remove from queue
+        if (updatedItem.attempts >= MAX_RETRY_ATTEMPTS) {
           await removeFromQueue(item.couponId);
           results.failed++;
-          console.warn(`Max retry attempts reached for coupon ${item.couponId}`);
         } else {
-          // Update queue with new attempt count
           const updatedQueue = queueData.queue.map(q =>
             q.couponId === item.couponId ? updatedItem : q
           );

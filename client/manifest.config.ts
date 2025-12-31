@@ -14,8 +14,12 @@ export default defineManifest({
     },
     default_popup: 'src/popup/index.html',
   },
-  permissions: ['sidePanel', 'contentSettings', 'activeTab', 'storage', 'scripting', 'alarms'],
-  host_permissions: ['http://localhost:3030/*', 'http://*/*', 'https://*/*', 'file:///*'],
+  // Minimal permissions - only what we actually need
+  // Removed: contentSettings (unused), scripting (use declarative content_scripts), file:/// (security risk)
+  permissions: ['sidePanel', 'activeTab', 'storage', 'alarms'],
+  // Only localhost for development API calls
+  // activeTab permission handles accessing page content without broad host_permissions
+  host_permissions: ['http://localhost:3030/*'],
   background: {
     service_worker: 'src/background/service-worker.ts',
     type: 'module',
@@ -23,7 +27,8 @@ export default defineManifest({
   content_scripts: [
     {
       js: ['src/content/main.tsx'],
-      matches: ['http://*/*', 'https://*/*', 'file:///*'],
+      // Content scripts run on all HTTP/HTTPS pages (file:/// removed for security)
+      matches: ['http://*/*', 'https://*/*'],
     },
   ],
   side_panel: {

@@ -328,11 +328,28 @@ export async function waitForPriceChange(
   return new Promise((resolve) => {
     const startTime = Date.now();
     let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+    let observerActive = true;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
-    // Find container to observe (checkout/cart section)
-    const container = document.querySelector('main, [role="main"], .checkout, .cart, body') || document.body;
+    // Cleanup function to prevent memory leaks
+    const cleanup = (): void => {
+      observerActive = false;
+      observer.disconnect();
+      if (debounceTimer) clearTimeout(debounceTimer);
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+
+    // Find container to observe - limit scope to relevant sections
+    const container = basePrice.element?.closest('[class*="checkout"], [class*="cart"], form')
+      || document.querySelector('main, [role="main"], .checkout, .cart')
+      || document.body;
 
     const checkPrice = async (): Promise<void> => {
+      // Exit early if observer was cleaned up
+      if (!observerActive) {
+        return;
+      }
+
       // CRITICAL FIX: Always check the SAME element that was used for baseline price
       // This prevents false positives from different price elements appearing/disappearing
       let newPrice: PriceInfo | null = null;
@@ -371,18 +388,19 @@ export async function waitForPriceChange(
 
       if (newPrice.value !== basePrice.value) {
         console.debug(`Price changed: ${basePrice.value} → ${newPrice.value}`);
-        observer.disconnect();
-        if (debounceTimer) clearTimeout(debounceTimer);
+        cleanup();
         resolve(newPrice);
       } else if (Date.now() - startTime > timeout) {
         console.debug('Timeout waiting for price change');
-        observer.disconnect();
-        if (debounceTimer) clearTimeout(debounceTimer);
+        cleanup();
         resolve(null);
       }
     };
 
     const observer = new MutationObserver(() => {
+      if (!observerActive) {
+        return;
+      }
       // Debounce: wait for DOM to settle before checking price
       if (debounceTimer) clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => {
@@ -396,10 +414,9 @@ export async function waitForPriceChange(
       characterData: true,
     });
 
-    // Also set a timeout to resolve with null
-    setTimeout(() => {
-      observer.disconnect();
-      if (debounceTimer) clearTimeout(debounceTimer);
+    // Set timeout to cleanup and resolve
+    timeoutId = setTimeout(() => {
+      cleanup();
       resolve(null);
     }, timeout);
   });
@@ -520,8 +537,18 @@ export async function autoApplyCoupons(options: ApplierOptions): Promise<Applier
 
     console.debug(`Baseline price detected: ${baselinePrice.currency}${baselinePrice.value}`);
 
-    // Sort coupons by success count (highest first)
-    const sortedCoupons = [...coupons].sort((a, b) => b.successCount - a.successCount);
+    // Sort coupons by success count (highest first), then by lastSuccessAt (most recent first)
+    const sortedCoupons = [...coupons].sort((a, b) => {
+      // Primary sort: success count (descending)
+      if (b.successCount !== a.successCount) {
+        return b.successCount - a.successCount;
+      }
+
+      // Secondary sort: most recently successful (descending)
+      const aTime = a.lastSuccessAt ? new Date(a.lastSuccessAt).getTime() : 0;
+      const bTime = b.lastSuccessAt ? new Date(b.lastSuccessAt).getTime() : 0;
+      return bTime - aTime;
+    });
 
     // Limit to maxAttempts
     const couponsToTest = sortedCoupons.slice(0, maxAttempts);
