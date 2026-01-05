@@ -1,0 +1,6 @@
+# CODEOWNERS file
+# This file defines code ownership for the repository.
+# All pull requests require approval from the owner.
+
+# Global owner - all files require approval from @EvgeniiKlepilin
+* @EvgeniiKlepilin

@@ -3,14 +3,16 @@
 
   # OpenCoupon
 
-  ### Open-Source Framework for Building Coupon Browser Extensions
+  ### Open-Source Framework for Building Transparent Coupon Browser Extensions
 
   <p>
-    <strong>Build your own Honey-like coupon extension with ease!</strong><br/>
-    A full-stack, production-ready framework for automatic coupon application at checkout.
+    <strong>Build transparent, user-first coupon extensions without predatory practices!</strong><br/>
+    A full-stack, production-ready framework for automatic coupon application at checkout,<br/>
+    designed with ethics, privacy, and transparency at its core.
   </p>
 
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+  [![Ethics First](https://img.shields.io/badge/Ethics-First-purple.svg)](#️-ethical-considerations)
   [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)](https://www.typescriptlang.org/)
   [![React](https://img.shields.io/badge/React-19.1-61dafb.svg)](https://reactjs.org/)
   [![Node](https://img.shields.io/badge/Node-20+-green.svg)](https://nodejs.org/)
@@ -21,6 +23,7 @@
   [Quick Start](#-quick-start) •
   [Documentation](#-documentation) •
   [Architecture](#-architecture) •
+  [Ethical Guidelines](#-ethical-considerations) •
   [Contributing](#-contributing)
 
 </div>
@@ -29,22 +32,25 @@
 
 ## 🎯 What is OpenCoupon?
 
-OpenCoupon is an **open-source framework** that lets you build your own browser extension for automatic coupon application - similar to Honey, but fully customizable and under your control. Perfect for developers who want to:
+OpenCoupon is an **open-source, ethical framework** for building browser extensions that automatically apply coupon codes at checkout. Unlike commercial alternatives that have faced criticism for predatory practices, OpenCoupon is built on transparency, user privacy, and fair attribution. Perfect for developers who want to:
 
 - 🛍️ **Create a coupon extension** for specific retailers or niches
+- ⚖️ **Build ethically** without cookie stuffing or hidden affiliate tracking
 - 🔧 **Customize** the user experience and branding
-- 📊 **Own your data** and control the backend
+- 📊 **Own your data** and respect user privacy
 - 🌟 **Learn** modern full-stack development with real-world applications
-- 🚀 **Deploy** a production-ready Chrome extension
+- 🚀 **Deploy** a production-ready, transparent Chrome extension
 
 ### Why OpenCoupon?
 
+- ✅ **Ethical by Design**: Built to avoid predatory practices like cookie stuffing and hidden tracking
+- ✅ **Transparent & Open**: Full source code visibility, no hidden agendas
+- ✅ **Privacy-First**: No cross-site tracking, minimal data collection, GDPR-ready
 - ✅ **Production-Ready**: Security-hardened, tested, and optimized
 - ✅ **Modern Stack**: React 19, TypeScript 5, Manifest V3, Prisma
 - ✅ **Full-Stack**: Complete backend API + Chrome Extension
 - ✅ **Well-Documented**: Comprehensive guides and inline documentation
 - ✅ **Extensible**: Clean architecture for easy customization
-- ✅ **Privacy-First**: No tracking, no telemetry, full transparency
 
 ---
 
@@ -250,6 +256,62 @@ graph TB
 
 ---
 
+## ⚖️ Ethical Considerations
+
+This project is built to provide a **transparent, user-first alternative** to commercial coupon extensions. Following the [MegaLag investigation series](https://www.youtube.com/@MegaLag) that exposed predatory practices in popular coupon extensions, OpenCoupon is designed to empower developers to build **ethical, honest tools** that serve users—not exploit them.
+
+Developers using this framework should adhere to the following ethical guidelines:
+
+### 1. Fair Attribution & "Stand Down" Policy
+
+**Respect Content Creators**
+- ❌ **No Cookie Stuffing**: If a user has already clicked an influencer's affiliate link, your extension **must stand down** and not overwrite that cookie with its own
+- ✅ **Transparent Rewards**: If the extension provides cashback/points, clearly disclose if that reward is funded by a commission that might otherwise have gone to a content creator
+- ❌ **No Hidden Tabs**: Never open background or hidden tabs to refresh affiliate cookies without the user's explicit knowledge and consent
+
+### 2. Merchant & Small Business Integrity
+
+**Respect Private Codes**
+- ❌ Don't scrape or share discount codes clearly intended for specific audiences (e.g., one-time welcome codes, employee-only codes, influencer-specific codes)
+- ✅ Provide a clear opt-out path for merchants to request their store be excluded from your database
+- ❌ **No Extortion**: Don't gate "code control" behind paid partnerships. If a merchant reports an invalid code, remove it regardless of their affiliate status
+
+### 3. Data Privacy & Transparency
+
+**Zero-Knowledge by Default**
+- ✅ Only collect data necessary to find coupons
+- ❌ Don't track cross-site browsing history or purchase habits to sell to third-party ad networks
+- ✅ **Explicit Consent**: Ask permission before activating "Rewards" or "Cashback" features that track purchases
+- ✅ **GDPR/CCPA Compliance**: Ensure users can easily view, export, or delete their data
+
+### 4. Protection of Minors
+
+**Age-Appropriate Practices**
+- ❌ Don't market the extension to minors or encourage children to install tracking software
+- ✅ Ensure COPPA compliance—don't collect data from users under 13
+
+### 5. The "Best Deal" Promise
+
+**Honest Sorting**
+- ✅ If you claim to find the "best deal," prioritize codes that provide the highest discount to the user
+- ❌ Don't prioritize codes that pay higher commissions over better user discounts
+- ✅ **Disclosure of Partnerships**: Clearly label "Partner" or "Sponsored" codes if promoted over others
+
+### Why This Matters
+
+The MegaLag investigation series ([Part 1](https://www.youtube.com/watch?v=vc4yL3YTwWk) • [Part 2](https://www.youtube.com/watch?v=wwB3FmbcC88) • [Part 3](https://www.youtube.com/watch?v=qCGT_CKGgFE)) exposed how browser extensions can move from being "helpful tools" to "predatory middlemen" engaging in:
+
+- **Cookie stuffing** that steals attribution from content creators
+- **Hidden affiliate tracking** without user knowledge
+- **Prioritizing profit over user benefit**
+- **Manipulation of merchant relationships**
+
+**By following these guidelines, you ensure that your implementation of OpenCoupon remains a tool for consumer empowerment rather than a mechanism for attribution theft.**
+
+> 💡 **OpenCoupon's Commitment**: OpenCoupon is built with ethical defaults. The codebase intentionally excludes affiliate tracking mechanisms and cookie manipulation features. If you choose to add such features to your fork, we urge you to do so transparently and ethically.
+
+---
+
 ## 🛠️ Development
 
 ### Project Structure
@@ -396,6 +458,7 @@ Contributions are welcome! Whether you're fixing bugs, adding features, or impro
 - **Commits**: Use clear, descriptive commit messages
 - **PRs**: One feature per PR, include screenshots for UI changes
 - **Issues**: Check existing issues before creating new ones
+- **Ethics First**: Ensure contributions align with our [ethical guidelines](#️-ethical-considerations). We will not accept PRs that introduce predatory tracking, cookie stuffing, or deceptive practices
 
 ### Development Setup
 
@@ -432,8 +495,21 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ## 🙏 Acknowledgments
 
-- Inspired by [Honey](https://www.joinhoney.com/) and other coupon extensions
-- Built with modern web technologies and best practices
+**Special Thanks**
+
+A huge thank you to [MegaLag](https://www.youtube.com/@MegaLag) for his groundbreaking investigative journalism exposing predatory practices in the browser extension industry. His three-part series on Honey was instrumental in inspiring this project's ethical foundation:
+
+- [Part 1: The Dark Side of Browser Extensions](https://www.youtube.com/watch?v=vc4yL3YTwWk)
+- [Part 2: How Honey Steals Commissions](https://www.youtube.com/watch?v=wwB3FmbcC88)
+- [Part 3: The Bigger Picture](https://www.youtube.com/watch?v=qCGT_CKGgFE)
+
+This investigation revealed how extensions meant to help users can transform into tools that exploit both consumers and content creators. OpenCoupon exists to provide a transparent alternative.
+
+**Additional Credits**
+
+- Inspired by the concept of browser coupon extensions, but built with transparency and ethics first
+- Built with modern web technologies and industry best practices
+- Community contributors who help maintain ethical standards
 
 ---
 
@@ -447,11 +523,12 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 <div align="center">
   <p>
     <strong>Star ⭐ this repository if you find it useful!</strong><br/>
-    Built with curiosity and ❤️
+    Built with curiosity, transparency, and ❤️
   </p>
 
   <p>
     <a href="#-quick-start">Get Started</a> •
+    <a href="#️-ethical-considerations">Ethical Guidelines</a> •
     <a href="./client/README.md">Frontend Docs</a> •
     <a href="./server/README.md">Backend Docs</a> •
     <a href="https://github.com/EvgeniiKlepilin/open-coupon/issues">Report Bug</a> •
