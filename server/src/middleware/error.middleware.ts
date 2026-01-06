@@ -4,7 +4,7 @@
  */
 
 import type { Request, Response, NextFunction } from 'express';
-import { AppError } from '../lib/errors.ts';
+import { AppError } from '../lib/errors.js';
 
 /**
  * Error response structure

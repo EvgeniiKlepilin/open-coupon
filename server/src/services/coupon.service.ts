@@ -3,8 +3,8 @@
  * Business logic for coupon operations
  */
 
-import { db } from '../lib/db.ts';
-import { NotFoundError } from '../lib/errors.ts';
+import { db } from '../lib/db.js';
+import { NotFoundError } from '../lib/errors.js';
 import type { Coupon } from '../generated/prisma/index.js';
 
 /**

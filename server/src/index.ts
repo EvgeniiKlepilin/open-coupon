@@ -4,8 +4,8 @@
  */
 
 import express from 'express';
-import couponRoutes from './routes/coupon.routes.ts';
-import { errorHandler, notFoundHandler } from './middleware/error.middleware.ts';
+import couponRoutes from './routes/coupon.routes.js';
+import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;

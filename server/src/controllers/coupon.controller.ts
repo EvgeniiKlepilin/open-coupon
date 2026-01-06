@@ -4,10 +4,11 @@
  */
 
 import type { Request, Response, NextFunction } from 'express';
-import { getCouponsByDomain } from '../services/coupon.service.ts';
-import { recordCouponFeedback, recordBatchCouponFeedback, calculateSuccessRate } from '../services/feedback.service.ts';
-import { BadRequestError } from '../lib/errors.ts';
-import { feedbackRequestSchema, batchFeedbackRequestSchema } from '../validators/feedback.validator.ts';
+import type { ZodIssue } from 'zod';
+import { getCouponsByDomain } from '../services/coupon.service.js';
+import { recordCouponFeedback, recordBatchCouponFeedback, calculateSuccessRate } from '../services/feedback.service.js';
+import { BadRequestError } from '../lib/errors.js';
+import { feedbackRequestSchema, batchFeedbackRequestSchema } from '../validators/feedback.validator.js';
 
 /**
  * GET /api/v1/coupons
@@ -51,11 +52,15 @@ export async function submitCouponFeedback(req: Request, res: Response, next: Ne
   try {
     const { id: couponId } = req.params;
 
+    if (!couponId) {
+      throw new BadRequestError('Coupon ID is required');
+    }
+
     // Validate request body using Zod
     const validationResult = feedbackRequestSchema.safeParse(req.body);
     if (!validationResult.success) {
-      const errorMessages = validationResult.error.errors
-        .map(e => {
+      const errorMessages = validationResult.error.issues
+        .map((e: ZodIssue) => {
           const path = e.path.length > 0 ? `${e.path.join('.')}: ` : '';
           return `${path}${e.message}`;
         })
@@ -104,8 +109,8 @@ export async function submitBatchCouponFeedback(req: Request, res: Response, nex
     // Validate request body using Zod
     const validationResult = batchFeedbackRequestSchema.safeParse(req.body);
     if (!validationResult.success) {
-      const errorMessages = validationResult.error.errors
-        .map(e => {
+      const errorMessages = validationResult.error.issues
+        .map((e: ZodIssue) => {
           const path = e.path.length > 0 ? `${e.path.join('.')}: ` : '';
           return `${path}${e.message}`;
         })
@@ -117,7 +122,7 @@ export async function submitBatchCouponFeedback(req: Request, res: Response, nex
     const { feedback } = validatedData;
 
     // Record batch feedback in database
-    const result = await recordBatchCouponFeedback(feedback);
+    const result = await recordBatchCouponFeedback(feedback.map(f => ({ ...f, metadata: f.metadata! })));
 
     // Return successful response
     res.status(200).json({
