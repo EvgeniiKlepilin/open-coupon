@@ -3,10 +3,10 @@
  * Business logic for coupon feedback operations
  */
 
-import { db } from '../lib/db.ts';
-import { NotFoundError, BadRequestError } from '../lib/errors.ts';
+import { db } from '../lib/db.js';
+import { NotFoundError, BadRequestError } from '../lib/errors.js';
 import type { Coupon } from '../generated/prisma/index.js';
-import type { FeedbackMetadata } from '../validators/feedback.validator.ts';
+import type { FeedbackMetadata } from '../validators/feedback.validator.js';
 
 /**
  * Record feedback for a coupon (success or failure)

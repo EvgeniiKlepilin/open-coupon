@@ -1,4 +1,4 @@
-# AGENTS.md - Project Context & Rules for AI Agents
+# CLAUDE.md - Project Context & Rules for AI Agents
 
 ## 1. Project Overview
 **Name:** OpenCoupon
@@ -11,7 +11,7 @@
 
 ### Frontend (Client)
 - **React:** 19.1.0
-- **TypeScript:** 5.8.3
+- **TypeScript:** 5.9.3 (hoisted from root)
 - **Vite:** 7.0.5
 - **Tailwind CSS:** 3.4.19
 - **Chrome Extension:** Manifest V3 with @crxjs/vite-plugin 2.0.3
@@ -32,20 +32,40 @@
 - **Hooks:** Husky 9.1.7
 
 ### Infrastructure
+- **Monorepo:** npm workspaces (root + client + server)
 - **Database:** PostgreSQL 15-alpine (Docker)
 - **Admin UI:** pgAdmin 4 (Docker, port 5050)
-- **Package Manager:** npm (separate package.json files, NOT workspaces)
+- **Package Manager:** npm 10+ with workspaces
 
 ## 3. Common Commands
 
 ### Root Level
 | Action | Command |
 | :--- | :--- |
-| **Start DB** | `docker compose up -d` |
-| **Stop DB** | `docker compose down` |
-| **View Logs** | `docker compose logs -f` |
+| **Install All** | `npm install` |
+| **Dev Mode (Both)** | `npm run dev` |
+| **Dev Client Only** | `npm run dev:client` |
+| **Dev Server Only** | `npm run dev:server` |
+| **Build All** | `npm run build` |
+| **Build Client** | `npm run build:client` |
+| **Build Server** | `npm run build:server` |
+| **Test All** | `npm run test` |
+| **Test Client** | `npm run test:client` |
+| **Test Server** | `npm run test:server` |
+| **Test Coverage (All)** | `npm run test:coverage` |
+| **Lint All** | `npm run lint` |
+| **Lint Fix** | `npm run lint:fix` |
+| **Format All** | `npm run format` |
+| **Format Check** | `npm run format:check` |
+| **Clean All** | `npm run clean` |
+| **Start DB** | `npm run db:up` |
+| **Stop DB** | `npm run db:down` |
+| **DB Logs** | `npm run db:logs` |
+| **DB Migrate** | `npm run db:migrate` |
+| **DB Seed** | `npm run db:seed` |
+| **DB Studio** | `npm run db:studio` |
 
-### Client (`cd client`)
+### Client (`cd client` or `npm -w client`)
 | Action | Command |
 | :--- | :--- |
 | **Dev Mode** | `npm run dev` |
@@ -55,12 +75,14 @@
 | **Test Coverage** | `npm run test:coverage` |
 | **Lint** | `npm run lint` |
 | **Preview Build** | `npm run preview` |
+| **Clean** | `npm run clean` |
 
-### Server (`cd server`)
+### Server (`cd server` or `npm -w server`)
 | Action | Command |
 | :--- | :--- |
 | **Dev Mode** | `npm run dev` |
 | **Build** | `npm run build` |
+| **Start** | `npm run start` |
 | **Run Tests** | `npm run test` |
 | **Test Watch** | `npm run test:watch` |
 | **Unit Tests Only** | `npm run test:unit` |
@@ -68,9 +90,9 @@
 | **Test Coverage** | `npm run test:coverage` |
 | **Lint** | `npm run lint` |
 | **Lint Fix** | `npm run lint:fix` |
+| **Migrate** | `npm run migrate` |
 | **Seed DB** | `npm run seed` |
-| **Prisma Migrate** | `npx prisma migrate dev --name <name>` |
-| **Prisma Studio** | `npx prisma studio` |
+| **Clean** | `npm run clean` |
 
 ## 4. Coding Standards
 
@@ -204,8 +226,8 @@
 ├── .env                        # Root environment config
 ├── .env.example                # Environment template
 ├── docker-compose.yml          # PostgreSQL + pgAdmin
-├── AGENTS.md                   # This file
-├── CLAUDE.md                   # Claude-specific instructions
+├── AGENTS.md                   # AI assistant instructions
+├── CLAUDE.md                   # This file
 ├── GEMINI.md                   # Gemini-specific instructions
 ├── MASTER_PRD.md              # Product Requirements Document
 └── README.md                   # Main documentation
@@ -306,13 +328,14 @@ NODE_ENV=development
 
 ## 10. Development Workflow
 
-1. **Start Database:** `docker compose up -d` (from root)
-2. **Run Migrations:** `cd server && npx prisma migrate dev`
-3. **Seed Database:** `cd server && npm run seed`
-4. **Start Backend:** `cd server && npm run dev` (runs on port 3030)
-5. **Start Frontend:** `cd client && npm run dev` (builds to `dist/`)
+1. **Install Dependencies:** `npm install` (from root - installs all workspaces)
+2. **Start Database:** `npm run db:up`
+3. **Run Migrations:** `npm run db:migrate`
+4. **Seed Database:** `npm run db:seed`
+5. **Start Both Services:** `npm run dev` (runs client + server in parallel)
+   - OR start individually: `npm run dev:client` / `npm run dev:server`
 6. **Load Extension:** Chrome → Extensions → Load unpacked → select `client/dist/`
-7. **Access pgAdmin:** http://localhost:5050 (for database management)
+7. **Access pgAdmin:** http://localhost:5050
 
 ## 11. Testing Best Practices
 
@@ -341,9 +364,13 @@ NODE_ENV=development
 
 ## 13. Important Notes
 
+- **Workspaces:** This project uses npm workspaces. Always run `npm install` from root
+- **Shared Dependencies:** TypeScript, ESLint, Prettier, and Husky are hoisted to root
+- **TypeScript Version:** Standardized to 5.9.3 across all packages
 - **Express 5:** Note that the server uses Express 5.x, which has breaking changes from Express 4
 - **React 19:** Client uses the latest React 19.1.0
-- **No Workspaces:** Client and server use separate `package.json` files, not npm workspaces
-- **Test Location:** Tests must be run from `client/` or `server/` directories, not root
+- **Test Location:** Tests can be run from root (`npm run test`) or individual packages
 - **Vitest vs Jest:** Frontend uses Vitest, backend uses Jest
-- **Pre-commit Hooks:** Husky runs linting and formatting checks before commits
+- **Husky Location:** Git hooks are in `/.husky/` directory (not in package.json)
+- **Package Lock:** Single `package-lock.json` at root manages all workspace dependencies
+- **Scripts from Root:** Use `npm run <script> -w <workspace>` or `--workspace=<name>`

@@ -4,8 +4,8 @@
  */
 
 import { Router } from 'express';
-import { getCoupons, submitCouponFeedback, submitBatchCouponFeedback } from '../controllers/coupon.controller.ts';
-import { feedbackRateLimiter, batchFeedbackRateLimiter } from '../middleware/rateLimiter.ts';
+import { getCoupons, submitCouponFeedback, submitBatchCouponFeedback } from '../controllers/coupon.controller.js';
+import { feedbackRateLimiter, batchFeedbackRateLimiter } from '../middleware/rateLimiter.js';
 
 const router = Router();
 
