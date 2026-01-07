@@ -2,6 +2,16 @@
 
 Thank you for your interest in contributing to OpenCoupon! We're building an ethical, transparent alternative to commercial coupon extensions, and we welcome contributions that align with this mission.
 
+## 📦 Monorepo Project
+
+OpenCoupon uses **npm workspaces** to manage the client (Chrome Extension) and server (API) as a unified monorepo. This means:
+
+- Install dependencies once from the root: `npm install`
+- Run commands across all packages: `npm test`, `npm run lint`, `npm run build`
+- Target specific workspaces: `npm test -w client` or `npm run dev:server`
+
+This guide will show you how to leverage the monorepo structure for efficient development.
+
 ## Table of Contents
 
 - [Code of Conduct](#code-of-conduct)
@@ -32,6 +42,8 @@ Before you begin, ensure you have the following installed:
 
 ### Development Setup
 
+OpenCoupon uses **npm workspaces** (monorepo architecture), which means you can run commands from the root to manage both client and server packages simultaneously.
+
 1. **Fork the repository**
 
    ```bash
@@ -46,36 +58,67 @@ Before you begin, ensure you have the following installed:
    git remote add upstream https://github.com/EvgeniiKlepilin/open-coupon.git
    ```
 
-3. **Start the database**
+3. **Install all dependencies** (from root)
+
+   ```bash
+   npm install  # Installs dependencies for both client and server
+   ```
+
+4. **Start the database**
 
    ```bash
    docker compose up -d
    ```
 
-4. **Set up the backend**
+5. **Run database migrations and seed**
 
    ```bash
-   cd server
-   npm install
-   cp .env.example .env  # Configure if needed
-   npm run seed          # Seed database with sample data
-   npm run dev           # Start development server
+   npm run db:migrate  # Run Prisma migrations
+   npm run db:seed     # Seed database with sample data
    ```
 
-5. **Set up the frontend** (in a new terminal)
+6. **Start development servers** (both client and server)
 
    ```bash
-   cd client
-   npm install
-   cp .env.example .env  # Configure if needed
-   npm run dev           # Start development build
+   npm run dev  # Starts both client and server in watch mode
    ```
 
-6. **Load the extension**
+   Alternatively, start them separately:
+
+   ```bash
+   # Terminal 1 - Backend
+   npm run dev:server
+
+   # Terminal 2 - Frontend
+   npm run dev:client
+   ```
+
+7. **Load the extension in Chrome**
    - Open Chrome and navigate to `chrome://extensions/`
-   - Enable "Developer mode"
+   - Enable "Developer mode" (toggle in top-right)
    - Click "Load unpacked"
    - Select the `client/dist` folder
+   - The extension icon should appear in your toolbar!
+
+### Recommended Development Workflow
+
+Once set up, use these commands during development:
+
+```bash
+# Terminal 1: Run both client and server in watch mode
+npm run dev
+
+# Terminal 2: Run tests as you code
+npm test -- --watch  # or npm run test:watch in specific workspace
+
+# Before committing
+npm run format       # Format all code
+npm run lint         # Check for linting issues
+npm test             # Run all 190 tests
+npm run build        # Verify build succeeds
+```
+
+**Pro Tip:** Husky pre-commit hooks will automatically run linting and formatting checks before each commit, catching issues early!
 
 ## How to Contribute
 
@@ -137,17 +180,21 @@ Submit feature requests via [GitHub Discussions](https://github.com/EvgeniiKlepi
 
 ### Code Style
 
-We use **ESLint** and **Prettier** to maintain consistent code style:
+We use **ESLint 9** (flat config) and **Prettier 3.7** to maintain consistent code style. Husky pre-commit hooks automatically enforce linting and formatting before commits.
 
 ```bash
-# Backend
-cd server
-npm run lint        # Check for issues
-npm run lint:fix    # Auto-fix issues
+# Run from root (recommended)
+npm run lint          # Lint all code (zero warnings required)
+npm run format        # Format all code with Prettier
+npm run format:check  # Check formatting without modifying files
 
-# Frontend
+# Or run per workspace
+cd server
+npm run lint          # Check for issues
+npm run lint:fix      # Auto-fix issues
+
 cd client
-npm run lint        # Check for issues
+npm run lint          # Check for issues
 ```
 
 **Key conventions:**
@@ -155,7 +202,7 @@ npm run lint        # Check for issues
 - **Indentation**: 2 spaces
 - **Quotes**: Single quotes for strings
 - **Semicolons**: Required
-- **Line length**: 100 characters max (flexible for readability)
+- **Line length**: 120 characters (Prettier configured)
 - **Naming**:
   - `camelCase` for variables and functions
   - `PascalCase` for classes and React components
@@ -182,14 +229,21 @@ npm run lint        # Check for issues
 
 ## Testing Requirements
 
-All contributions must include appropriate tests:
+All contributions must include appropriate tests. The project currently has **190 tests passing** (132 client + 58 server).
+
+### Running All Tests
+
+```bash
+# Run all tests from root (recommended)
+npm test  # Runs both client (132 tests) and server (58 tests)
+```
 
 ### Backend Testing
 
 ```bash
 cd server
 
-# Run all tests
+# Run all backend tests (58 tests)
 npm test
 
 # Run specific test suites
@@ -215,10 +269,10 @@ npm run test:coverage
 ```bash
 cd client
 
-# Run tests
+# Run all frontend tests (132 tests)
 npm test
 
-# Run with UI
+# Run with interactive UI
 npm run test:ui
 
 # Run with coverage
@@ -228,8 +282,9 @@ npm run test:coverage
 **Requirements:**
 
 - UI components must have component tests
-- Complex logic must have unit tests
+- Complex logic (content scripts, services) must have unit tests
 - Use test utilities from `client/src/test/testUtils.tsx`
+- Follow React Testing Library best practices
 
 ## Commit Guidelines
 
@@ -316,10 +371,14 @@ docs(readme): add installation troubleshooting section
 4. **Test thoroughly**
 
    ```bash
-   # Backend
-   cd server && npm test && npm run lint
+   # Run from root (recommended)
+   npm test             # Run all tests (190 tests)
+   npm run lint         # Lint all code
+   npm run format:check # Check formatting
+   npm run build        # Verify build succeeds
 
-   # Frontend
+   # Or test individually
+   cd server && npm test && npm run lint
    cd client && npm test && npm run lint
    ```
 
@@ -347,20 +406,37 @@ docs(readme): add installation troubleshooting section
 
 ✅ **Required for merge:**
 
-- All tests passing
-- No linting errors
+- All tests passing (190 tests)
+- No linting errors (zero warnings required)
+- No formatting issues (Prettier check passes)
 - Code coverage maintained or improved
 - Documentation updated (if applicable)
 - Commit messages follow guidelines
 - PR description is complete
 - Aligns with [ethical guidelines](#ethical-guidelines)
+- **CI/CD pipeline passes** (GitHub Actions)
+
+### CI/CD Pipeline
+
+All pull requests automatically trigger the GitHub Actions CI workflow (`.github/workflows/ci.yml`):
+
+**Automated Checks:**
+
+1. ✅ Dependency installation with npm cache
+2. ✅ Prisma client generation
+3. ✅ Build verification (client + server)
+4. ✅ Test suite execution (unit tests)
+5. ✅ Code linting (zero warnings enforced)
+6. ✅ Code formatting validation (Prettier)
+
+**All checks must pass before your PR can be merged.**
 
 ### Review Process
 
-1. **Automated checks** run (tests, linting, coverage)
+1. **Automated checks** run via GitHub Actions CI
 2. **Maintainer review** within 3-5 business days
 3. **Address feedback** if requested
-4. **Approval & merge** once ready
+4. **Approval & merge** once all checks pass and code is approved
 
 ## Ethical Guidelines
 

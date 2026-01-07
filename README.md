@@ -76,8 +76,9 @@ OpenCoupon is an **open-source, ethical framework** for building browser extensi
 - **RESTful API**: Node.js + Express backend
 - **PostgreSQL Database**: Scalable data storage with Prisma ORM
 - **Rate Limiting**: Client and server-side protection
-- **Comprehensive Tests**: 58 unit and integration tests
+- **Comprehensive Tests**: 190 total tests (132 client + 58 server)
 - **Security Hardened**: Input validation, sanitization, minimal permissions
+- **CI/CD Pipeline**: Automated testing, linting, and build verification via GitHub Actions
 
 ---
 
@@ -206,11 +207,13 @@ OpenCoupon is an **open-source, ethical framework** for building browser extensi
 - Zod for validation
 - Jest for testing
 
-**DevOps**
+**DevOps & Tooling**
 
 - Docker & Docker Compose
-- ESLint + Prettier
-- Husky for pre-commit hooks
+- GitHub Actions (CI/CD)
+- ESLint 9 (flat config) + Prettier 3.7
+- Husky 9.1 for pre-commit hooks
+- npm workspaces (monorepo)
 </details>
 
 ---
@@ -331,16 +334,36 @@ The MegaLag investigation series ([Part 1](https://www.youtube.com/watch?v=vc4yL
 
 ## 🛠️ Development
 
+### Monorepo Architecture
+
+OpenCoupon uses **npm workspaces** to manage the client and server packages in a single repository. This approach:
+
+- 📦 Shares dependencies (TypeScript, ESLint, Prettier, Husky) at the root level
+- 🔄 Enables running commands across all packages simultaneously
+- 🚀 Simplifies development with unified build, test, and lint commands
+- 📝 Maintains a single `package-lock.json` for consistent dependencies
+
+**Run commands from root:** `npm run <command>` affects all workspaces
+**Target specific workspace:** `npm run <command> --workspace=client` or `npm run <command> -w server`
+
 ### Project Structure
 
 ```
 open-coupon/
+├── .github/             # GitHub Actions workflows
+│   └── workflows/
+│       └── ci.yml       # CI/CD pipeline
+├── .husky/              # Git hooks configuration
+│   └── pre-commit       # Pre-commit checks
 ├── client/              # Chrome Extension (Frontend)
 │   ├── src/
 │   │   ├── background/  # Service worker
 │   │   ├── content/     # Content scripts (auto-apply logic)
 │   │   ├── popup/       # Extension popup UI
+│   │   ├── sidepanel/   # Chrome side panel UI
 │   │   ├── services/    # API clients
+│   │   ├── test/        # Test utilities and setup
+│   │   ├── types/       # TypeScript definitions
 │   │   └── utils/       # Helpers, validation, security
 │   ├── public/          # Static assets
 │   └── dist/            # Built extension (load this in Chrome)
@@ -351,20 +374,37 @@ open-coupon/
 │   │   ├── routes/      # API routes
 │   │   ├── services/    # Business logic
 │   │   ├── middleware/  # Rate limiting, error handling
-│   │   └── validators/  # Zod schemas
+│   │   ├── validators/  # Zod schemas
+│   │   ├── lib/         # Core utilities (db, errors)
+│   │   └── __tests__/   # Test suite (58 tests)
 │   └── prisma/          # Database schema & migrations
 │
-├── docker-compose.yml   # PostgreSQL database
-└── MASTER_PRD.md       # Product requirements document
+├── docker-compose.yml   # PostgreSQL + pgAdmin
+├── .prettierrc          # Code formatting config
+├── .prettierignore      # Files excluded from formatting
+├── eslint.config.js     # Linting configuration
+├── MASTER_PRD.md        # Product requirements document
+├── CONTRIBUTING.md      # Contribution guidelines
+└── CODE_OF_CONDUCT.md   # Community guidelines
 ```
 
 ### Common Commands
 
 ```bash
+# Run from root (recommended)
+npm run dev              # Start both client and server
+npm test                 # Run all tests (190 tests)
+npm run build            # Build both packages
+npm run lint             # Lint all code
+npm run format           # Format all code with Prettier
+npm run format:check     # Check code formatting
+
 # Backend
 cd server
 npm run dev              # Start development server
 npm test                 # Run all tests (58 tests)
+npm run test:unit        # Run unit tests only
+npm run test:integration # Run integration tests
 npm run seed             # Populate database with sample data
 npm run lint             # Check code style
 
@@ -372,7 +412,8 @@ npm run lint             # Check code style
 cd client
 npm run dev              # Start development build (watch mode)
 npm run build            # Production build
-npm test                 # Run tests
+npm test                 # Run tests (132 tests)
+npm run test:ui          # Interactive test UI
 npm run lint             # Check code style
 
 # Database
@@ -412,103 +453,81 @@ npm run test:unit         # Unit tests (services, utilities)
 npm run test:integration  # Integration tests (API endpoints)
 npm run test:coverage     # Generate coverage report
 
-# Frontend tests
+# Frontend tests (132 tests)
 cd client
 npm test                  # Run Vitest tests
 npm run test:ui          # Interactive test UI
 npm run test:coverage    # Generate coverage report
+
+# Run all tests from root
+npm test                  # Runs both client and server tests
 ```
 
 **Current Test Coverage:**
 
-- ✅ 58/58 Backend tests passing
-- ✅ API endpoint integration tests
-- ✅ Service layer unit tests
-- ✅ Validation schema tests
-- ✅ Error handling tests
+- ✅ 190/190 Total tests passing (132 client + 58 server)
+- ✅ Client: Content script tests, API client tests, UI component tests
+- ✅ Server: API endpoint integration tests, service layer unit tests
+- ✅ Validation schema tests and error handling tests
+- ✅ Coverage thresholds: 75% branches, 100% functions, 90% lines/statements (server)
+
+---
+
+## 🔄 Continuous Integration
+
+The project uses **GitHub Actions** for automated quality checks on every push and pull request:
+
+**CI Pipeline Steps:**
+
+1. ✅ Dependency installation with npm cache
+2. ✅ Prisma client generation
+3. ✅ Build verification (client + server)
+4. ✅ Unit test suite execution
+5. ✅ Code linting
+6. ✅ Code formatting validation (Prettier)
+
+**Workflow File:** `.github/workflows/ci.yml`
+
+The CI pipeline ensures code quality and prevents regressions by running the complete test suite and enforcing code style standards before merging.
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Whether you're fixing bugs, adding features, or improving documentation, your help is appreciated.
+We welcome contributions from the community! Whether you're fixing bugs, adding features, improving documentation, or enhancing tests, your help makes OpenCoupon better for everyone.
 
-### How to Contribute
+**Before contributing, please read our [Contributing Guidelines](CONTRIBUTING.md)** for detailed information on:
 
-1. **Fork the repository**
+- 🛠️ Development setup and workflow
+- 📋 Coding standards and style guide
+- 🧪 Testing requirements (190 tests)
+- 💬 Commit message conventions
+- 🔄 Pull request process
+- ⚖️ Ethical guidelines for contributions
+- 🤖 CI/CD pipeline requirements
 
-   ```bash
-   # Click "Fork" on GitHub, then clone your fork
-   git clone https://github.com/YOUR_USERNAME/open-coupon.git
-   cd open-coupon
-   ```
+### Quick Contribution Checklist
 
-2. **Create a feature branch**
+✅ Fork and clone the repository
+✅ Create a feature branch
+✅ Follow TypeScript and code style guidelines (ESLint 9 + Prettier 3.7)
+✅ Add tests for new features (maintain >75% coverage)
+✅ Ensure all 190 tests pass (`npm test`)
+✅ Verify linting passes with zero warnings (`npm run lint`)
+✅ Check formatting (`npm run format:check`)
+✅ Write clear commit messages (Conventional Commits)
+✅ Ensure CI/CD pipeline passes
+✅ Align with our [ethical guidelines](#️-ethical-considerations)
 
-   ```bash
-   git checkout -b feature/amazing-feature
-   ```
+### Areas We'd Love Help With
 
-3. **Make your changes**
-   - Follow the existing code style
-   - Add tests for new features
-   - Update documentation as needed
-   - Run `npm run lint` to check code style
-   - Run `npm test` to ensure tests pass
+🌟 **High Priority:** UI/UX improvements, Mobile browser support, Firefox extension port
 
-4. **Commit your changes**
+💡 **Feature Ideas:** Multi-language support, Coupon expiry tracking, Analytics dashboard
 
-   ```bash
-   git commit -m "Add amazing feature"
-   ```
+📝 **Documentation:** Architecture diagrams, API documentation, Deployment guides
 
-5. **Push to your fork**
-
-   ```bash
-   git push origin feature/amazing-feature
-   ```
-
-6. **Open a Pull Request**
-   - Go to the original repository on GitHub
-   - Click "New Pull Request"
-   - Select your fork and branch
-   - Describe your changes in detail
-
-### Contribution Guidelines
-
-- **Code Style**: Follow TypeScript best practices, use ESLint/Prettier
-- **Tests**: Add tests for new features, maintain >80% coverage
-- **Documentation**: Where applicable, update READMEs and inline comments
-- **Commits**: Use clear, descriptive commit messages
-- **PRs**: One feature per PR, include screenshots for UI changes
-- **Issues**: Check existing issues before creating new ones
-- **Ethics First**: Ensure contributions align with our [ethical guidelines](#️-ethical-considerations). We will not accept PRs that introduce predatory tracking, cookie stuffing, or deceptive practices
-
-### Development Setup
-
-See [Quick Start](#-quick-start) for detailed setup instructions.
-
-### Areas for Contribution
-
-🌟 **High Priority:**
-
-- UI/UX improvements
-- Mobile browser support
-- Firefox extension port
-
-💡 **Feature Ideas:**
-
-- Multi-language support
-- Coupon expiry tracking
-- Browser sync across devices
-- Analytics dashboard
-- Coupon and Retailer Management platform
-
-📝 **Documentation:**
-
-- Architecture diagrams
-- API documentation
-- Deployment guides
+**👉 See the full [Contributing Guide](CONTRIBUTING.md) to get started!**
 
 ---
 
