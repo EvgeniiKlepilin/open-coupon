@@ -2,6 +2,8 @@
 
 This directory contains the Node.js + Express backend API for OpenCoupon - a RESTful API that manages coupon data, tracks success rates, and provides feedback analytics.
 
+**Part of the OpenCoupon monorepo** - This package is managed using npm workspaces alongside the Chrome Extension client. See the [main README](../README.md) for monorepo setup instructions.
+
 ## Architecture
 
 The backend follows a **layered architecture** pattern for separation of concerns:
@@ -426,55 +428,76 @@ Submit feedback for multiple coupons in a single request (efficient for auto-app
 
 ### Installation
 
-1. **Install dependencies**
+**Recommended: Install from root** (installs both client and server):
 
-   ```bash
-   cd server
-   npm install
-   ```
+```bash
+# From project root
+npm install
+```
 
-2. **Start PostgreSQL database**
+**Or install server only**:
 
-   ```bash
-   # From project root
-   docker compose up -d
-   ```
+```bash
+cd server
+npm install
+```
 
-3. **Configure environment**
+**Start PostgreSQL database**:
 
-   ```bash
-   cp .env.example .env
-   ```
+```bash
+# From project root
+docker compose up -d
+```
 
-   Edit `.env`:
+**Configure environment**:
 
-   ```bash
-   DATABASE_URL="postgresql://user:password@localhost:5432/opencoupon?schema=public"
-   PORT=3030
-   NODE_ENV=development
-   ```
+```bash
+cp .env.example .env
+```
 
-4. **Run database migrations**
+Edit `.env`:
 
-   ```bash
-   npx prisma migrate dev
-   ```
+```bash
+DATABASE_URL="postgresql://user:password@localhost:5432/opencoupon?schema=public"
+PORT=3030
+NODE_ENV=development
+```
 
-5. **Seed database** (optional - adds sample retailers and coupons)
+**Run database migrations**:
 
-   ```bash
-   npm run seed
-   ```
+```bash
+# From root
+npm run db:migrate
 
-6. **Start development server**
+# Or from server directory
+npx prisma migrate dev
+```
 
-   ```bash
-   npm run dev
-   ```
+**Seed database** (optional - adds sample retailers and coupons):
 
-   Server runs at `http://localhost:3030`
+```bash
+# From root
+npm run db:seed
+
+# Or from server directory
+npm run seed
+```
+
+**Start development server**:
+
+```bash
+# From server directory
+npm run dev
+
+# Or from root (starts both client and server)
+npm run dev
+```
+
+Server runs at `http://localhost:3030`
 
 ### Development Commands
+
+**From server directory**:
 
 ```bash
 # Start development server (with hot reload via tsx watch)
@@ -507,15 +530,33 @@ npm run test:coverage
 # Lint code
 npm run lint
 
+# Format code
+npm run format
+
 # Type check
 npx tsc --noEmit
 ```
 
+**From root** (affects both client and server):
+
+```bash
+npm run dev              # Start both client and server
+npm test                 # Run all tests (190 tests)
+npm run lint             # Lint all code
+npm run format           # Format all code with Prettier
+npm run build            # Build both packages
+npm run db:migrate       # Run database migrations
+npm run db:seed          # Seed database
+npm run db:studio        # Open Prisma Studio
+```
+
 ## Testing
+
+The server has **58 passing tests** covering services, utilities, and API endpoints.
 
 ### Unit Tests
 
-Test individual services and utilities in isolation.
+Test individual services and utilities in isolation using **Jest 30.2** with ts-jest.
 
 **Example** (`coupon.service.test.ts`):
 
@@ -585,12 +626,38 @@ npm test -- coupon.service.test.ts
 
 ### Test Coverage
 
-Current coverage: **>85%**
+Current coverage: **>85%** with strict thresholds enforced:
+
+- Branches: 75%
+- Functions: 100%
+- Lines: 90%
+- Statements: 90%
+
+**By Component:**
 
 - Controllers: >90%
 - Services: >85%
 - Validators: 100%
 - Error handling: >80%
+
+## CI/CD Pipeline
+
+The server is part of the automated CI/CD pipeline using **GitHub Actions**:
+
+**Automated Checks on Every Push/PR:**
+
+- ✅ Dependency installation with npm cache
+- ✅ Prisma client generation
+- ✅ Build verification
+- ✅ Unit test suite execution (58 tests)
+- ✅ Code linting (ESLint 9, zero warnings enforced)
+- ✅ Code formatting validation (Prettier 3.7)
+
+**Workflow File:** `.github/workflows/ci.yml`
+
+**Note:** CI runs unit tests only (not integration tests) to keep build time short while maintaining core coverage.
+
+All checks must pass before PRs can be merged. See [main README](../README.md) for full CI/CD details.
 
 ## Database Management
 
@@ -787,31 +854,35 @@ Returns:
 
 We welcome backend contributions!
 
-### Contribution Areas
+**Before contributing, please read the [Contributing Guidelines](../CONTRIBUTING.md)** for detailed information on:
+
+- Development setup and workflow
+- Coding standards (TypeScript strict mode, ESLint 9 + Prettier 3.7)
+- Testing requirements (maintain 58 tests, >85% coverage)
+- Commit message conventions
+- Pull request process
+- CI/CD pipeline requirements
+
+### Quick Contribution Checklist
+
+✅ Follow TypeScript strict mode and async/await patterns
+✅ Add tests for new features (Jest + Supertest)
+✅ Maintain coverage thresholds (75% branches, 100% functions, 90% lines)
+✅ Run `npm run format` before committing
+✅ Ensure all tests pass (`npm test` - 58 tests)
+✅ Verify linting passes with zero warnings (`npm run lint`)
+✅ Use Conventional Commits format
+✅ Ensure CI pipeline passes
+
+### Priority Areas
 
 - **API Endpoints**: Add endpoints for creating/deleting coupons, managing retailers
-- **Database Schema**: Add fields for coupon categories, user submissions, etc.
-- **Performance**: Optimize database queries, add caching layer
+- **Database Schema**: Add fields for coupon categories, user submissions
+- **Performance**: Optimize database queries, add caching layer (Redis)
 - **Testing**: Increase test coverage, add E2E tests
 - **Documentation**: API documentation with OpenAPI/Swagger
 
-### Development Workflow
-
-1. Fork repository
-2. Create feature branch
-3. Write tests for new features
-4. Implement feature
-5. Run tests: `npm test`
-6. Run linter: `npm run lint`
-7. Create Pull Request
-
-### Code Style
-
-- **TypeScript**: Strict mode enabled
-- **Async/Await**: Use async/await over callbacks
-- **Error Handling**: Always use try/catch in async functions
-- **Comments**: JSDoc for public functions
-- **Formatting**: Prettier (2 spaces, single quotes)
+**See [CONTRIBUTING.md](../CONTRIBUTING.md) for complete guidelines.**
 
 ## License
 

@@ -2,6 +2,8 @@
 
 This directory contains the Chrome Extension frontend for OpenCoupon - a production-ready, security-hardened browser extension for automatic coupon application at checkout.
 
+**Part of the OpenCoupon monorepo** - This package is managed using npm workspaces alongside the backend server. See the [main README](../README.md) for monorepo setup instructions.
+
 ## Architecture
 
 The extension follows Chrome's **Manifest V3** standards and consists of four main components:
@@ -176,45 +178,58 @@ client/
 
 ### Installation
 
-1. **Install dependencies**
+**Recommended: Install from root** (installs both client and server):
 
-   ```bash
-   cd client
-   npm install
-   ```
+```bash
+# From project root
+npm install
+```
 
-2. **Configure environment**
+**Or install client only**:
 
-   ```bash
-   cp .env.example .env
-   ```
+```bash
+cd client
+npm install
+```
 
-   Edit `.env`:
+**Configure environment**:
 
-   ```bash
-   VITE_API_BASE_URL=http://localhost:3030/api/v1
-   VITE_ENV=development
-   ```
+```bash
+cp .env.example .env
+```
 
-3. **Start development build**
+Edit `.env`:
 
-   ```bash
-   npm run dev
-   ```
+```bash
+VITE_API_BASE_URL=http://localhost:3030/api/v1
+VITE_ENV=development
+```
 
-   This starts Vite in watch mode. Changes to source files will automatically rebuild the extension.
+**Start development build**:
 
-4. **Load extension in Chrome**
-   - Navigate to `chrome://extensions/`
-   - Enable "Developer mode" (toggle in top-right)
-   - Click "Load unpacked"
-   - Select the `client/dist` folder
-   - The extension should appear in your toolbar
+```bash
+# From client directory
+npm run dev
 
-5. **Test the extension**
-   - Visit any e-commerce checkout page
-   - Click the OpenCoupon icon in the toolbar
-   - Click "Auto-Apply Coupons" to test auto-apply
+# Or from root (starts both client and server)
+npm run dev
+```
+
+This starts Vite in watch mode. Changes to source files will automatically rebuild the extension.
+
+**Load extension in Chrome**:
+
+- Navigate to `chrome://extensions/`
+- Enable "Developer mode" (toggle in top-right)
+- Click "Load unpacked"
+- Select the `client/dist` folder
+- The extension should appear in your toolbar
+
+**Test the extension**:
+
+- Visit any e-commerce checkout page
+- Click the OpenCoupon icon in the toolbar
+- Click "Auto-Apply Coupons" to test auto-apply
 
 ### Development Commands
 
@@ -225,7 +240,7 @@ npm run dev
 # Production build
 npm run build
 
-# Run tests
+# Run tests (132 tests)
 npm test
 
 # Run tests with UI
@@ -236,6 +251,20 @@ npm run test:coverage
 
 # Lint code
 npm run lint
+
+# Format code
+npm run format
+```
+
+**Run from root** (affects both client and server):
+
+```bash
+# From project root
+npm run dev              # Start both client and server
+npm test                 # Run all tests (190 tests)
+npm run lint             # Lint all code
+npm run format           # Format all code with Prettier
+npm run build            # Build both packages
 ```
 
 ### Hot Reload
@@ -317,9 +346,11 @@ No hardcoded URLs in source code.
 
 ## Testing
 
+The client has **132 passing tests** covering content scripts, services, and UI components.
+
 ### Unit Tests
 
-Tests are written with **Vitest** and **React Testing Library**.
+Tests are written with **Vitest 4.0** and **React Testing Library 16.3**.
 
 **Example test** (`detector.test.ts`):
 
@@ -360,6 +391,22 @@ npm run test:ui
 - **Applier**: >80% coverage
 - **Security Utils**: 100% coverage
 - **Services**: >85% coverage
+
+## CI/CD Pipeline
+
+The client is part of the automated CI/CD pipeline using **GitHub Actions**:
+
+**Automated Checks on Every Push/PR:**
+
+- ✅ Dependency installation with npm cache
+- ✅ Build verification
+- ✅ Test suite execution (132 tests)
+- ✅ Code linting (ESLint 9, zero warnings enforced)
+- ✅ Code formatting validation (Prettier 3.7)
+
+**Workflow File:** `.github/workflows/ci.yml`
+
+All checks must pass before PRs can be merged. See [main README](../README.md) for full CI/CD details.
 
 ## Deployment
 
@@ -471,32 +518,35 @@ console.log('[OpenCoupon] Starting auto-apply with', coupons.length, 'coupons');
 
 ## Contributing
 
-We welcome contributions to improve the extension!
+We welcome contributions to improve the Chrome Extension!
 
-### Contribution Areas
+**Before contributing, please read the [Contributing Guidelines](../CONTRIBUTING.md)** for detailed information on:
+
+- Development setup and workflow
+- Coding standards (TypeScript strict mode, ESLint 9 + Prettier 3.7)
+- Testing requirements (maintain 132 tests)
+- Commit message conventions
+- Pull request process
+- CI/CD pipeline requirements
+
+### Quick Contribution Checklist
+
+✅ Follow TypeScript strict mode and React best practices
+✅ Add tests for new features (Vitest + React Testing Library)
+✅ Run `npm run format` before committing
+✅ Ensure all tests pass (`npm test` - 132 tests)
+✅ Verify linting passes with zero warnings (`npm run lint`)
+✅ Use Conventional Commits format
+✅ Ensure CI pipeline passes
+
+### Priority Areas
 
 - **UI/UX Improvements**: Enhance popup and overlay components
-- **More Advanced Coupon Field Detection**: Improve field detection algorithms and approaches
-- **Testing**: Add test coverage for new features
+- **Advanced Coupon Field Detection**: Improve detection algorithms
+- **Testing**: Add test coverage for edge cases
 - **Documentation**: Improve inline comments and guides
 
-### Development Workflow
-
-1. Fork the repository
-2. Create feature branch: `git checkout -b feature/my-feature`
-3. Make changes and test thoroughly
-4. Run linter: `npm run lint`
-5. Run tests: `npm test`
-6. Commit with clear message
-7. Push and create Pull Request
-
-### Code Style
-
-- **TypeScript**: Strict mode enabled
-- **React**: Functional components with hooks
-- **Naming**: camelCase for variables, PascalCase for components
-- **Comments**: JSDoc for public functions
-- **Formatting**: Prettier (runs on save)
+**See [CONTRIBUTING.md](../CONTRIBUTING.md) for complete guidelines.**
 
 ## License
 
