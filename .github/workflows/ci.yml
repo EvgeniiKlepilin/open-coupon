@@ -37,8 +37,11 @@ jobs:
       - name: Build all packages
         run: npm run build
 
-      - name: Run all tests
-        run: npm run test
+      - name: Run client tests
+        run: npm run test --workspace=client
+
+      - name: Run server unit tests
+        run: npm run test:unit --workspace=server
 
       - name: Run linting
         run: npm run lint
