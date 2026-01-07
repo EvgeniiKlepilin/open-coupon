@@ -3,6 +3,7 @@ dist
 coverage
 client/release
 server/prisma/migrations
+server/src/generated
 *.lock
 *.log
 package-lock.json
