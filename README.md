@@ -12,12 +12,14 @@
   </p>
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![CI](https://github.com/EvgeniiKlepilin/open-coupon/actions/workflows/ci.yml/badge.svg)](https://github.com/EvgeniiKlepilin/open-coupon/actions/workflows/ci.yml)
 [![Ethics First](https://img.shields.io/badge/Ethics-First-purple.svg)](#️-ethical-considerations)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue.svg)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19.1-61dafb.svg)](https://reactjs.org/)
 [![Node](https://img.shields.io/badge/Node-20+-green.svg)](https://nodejs.org/)
-[![Tests](https://img.shields.io/badge/Tests-58%20Passing-success.svg)](https://github.com/EvgeniiKlepilin/open-coupon)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/EvgeniiKlepilin/open-coupon/pulls)
+[![Last Commit](https://img.shields.io/github/last-commit/EvgeniiKlepilin/open-coupon)](https://github.com/EvgeniiKlepilin/open-coupon/commits/main)
+[![Issues](https://img.shields.io/github/issues/EvgeniiKlepilin/open-coupon)](https://github.com/EvgeniiKlepilin/open-coupon/issues)
 
 [Features](#-features) •
 [Quick Start](#-quick-start) •
