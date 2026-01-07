@@ -33,6 +33,7 @@ Before you begin, ensure you have the following installed:
 ### Development Setup
 
 1. **Fork the repository**
+
    ```bash
    # Click "Fork" on GitHub, then clone your fork
    git clone https://github.com/YOUR_USERNAME/open-coupon.git
@@ -40,16 +41,19 @@ Before you begin, ensure you have the following installed:
    ```
 
 2. **Add upstream remote**
+
    ```bash
    git remote add upstream https://github.com/EvgeniiKlepilin/open-coupon.git
    ```
 
 3. **Start the database**
+
    ```bash
    docker compose up -d
    ```
 
 4. **Set up the backend**
+
    ```bash
    cd server
    npm install
@@ -59,6 +63,7 @@ Before you begin, ensure you have the following installed:
    ```
 
 5. **Set up the frontend** (in a new terminal)
+
    ```bash
    cd client
    npm install
@@ -146,6 +151,7 @@ npm run lint        # Check for issues
 ```
 
 **Key conventions:**
+
 - **Indentation**: 2 spaces
 - **Quotes**: Single quotes for strings
 - **Semicolons**: Required
@@ -159,6 +165,7 @@ npm run lint        # Check for issues
 ### Project-Specific Guidelines
 
 **Frontend (Chrome Extension)**
+
 - Use Manifest V3 APIs only
 - Verify DOM elements exist before manipulation
 - Use `chrome.storage.local` (not `localStorage`)
@@ -166,6 +173,7 @@ npm run lint        # Check for issues
 - Follow React Hooks best practices
 
 **Backend (API)**
+
 - Follow Routes → Controllers → Services → Prisma pattern
 - Use Zod for request validation
 - Always use error middleware
@@ -193,6 +201,7 @@ npm run test:coverage
 ```
 
 **Requirements:**
+
 - New features must have unit tests
 - API endpoints must have integration tests
 - Maintain coverage thresholds:
@@ -217,6 +226,7 @@ npm run test:coverage
 ```
 
 **Requirements:**
+
 - UI components must have component tests
 - Complex logic must have unit tests
 - Use test utilities from `client/src/test/testUtils.tsx`
@@ -284,12 +294,14 @@ docs(readme): add installation troubleshooting section
 ### Before Submitting
 
 1. **Sync with upstream**
+
    ```bash
    git fetch upstream
    git rebase upstream/main
    ```
 
 2. **Create a feature branch**
+
    ```bash
    git checkout -b feature/amazing-feature
    # or
@@ -302,6 +314,7 @@ docs(readme): add installation troubleshooting section
    - Update documentation
 
 4. **Test thoroughly**
+
    ```bash
    # Backend
    cd server && npm test && npm run lint
@@ -311,6 +324,7 @@ docs(readme): add installation troubleshooting section
    ```
 
 5. **Commit your changes**
+
    ```bash
    git add .
    git commit -m "feat: add amazing feature"
@@ -332,6 +346,7 @@ docs(readme): add installation troubleshooting section
 ### PR Requirements
 
 ✅ **Required for merge:**
+
 - All tests passing
 - No linting errors
 - Code coverage maintained or improved

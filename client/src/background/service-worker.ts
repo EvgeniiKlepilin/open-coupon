@@ -96,9 +96,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   if (message.type === 'GET_QUEUE_STATUS') {
     // Return queue status
-    chrome.storage.local.get('feedbackQueue')
+    chrome.storage.local
+      .get('feedbackQueue')
       .then((result) => {
-        const queueData = (result.feedbackQueue as { queue: unknown[]; lastProcessedAt: number } | undefined) || { queue: [], lastProcessedAt: 0 };
+        const queueData = (result.feedbackQueue as { queue: unknown[]; lastProcessedAt: number } | undefined) || {
+          queue: [],
+          lastProcessedAt: 0,
+        };
         sendResponse({
           success: true,
           queueSize: queueData.queue.length,

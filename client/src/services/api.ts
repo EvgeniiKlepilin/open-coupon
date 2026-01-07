@@ -63,11 +63,7 @@ async function saveToCache<T>(key: string, data: T): Promise<void> {
 /**
  * Makes a fetch request with timeout
  */
-async function fetchWithTimeout(
-  url: string,
-  options: RequestInit = {},
-  timeoutMs: number = 10000
-): Promise<Response> {
+async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs: number = 10000): Promise<Response> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -90,7 +86,7 @@ async function fetchWithTimeout(
 async function fetchWithRetry(
   url: string,
   options: RequestInit = {},
-  retries: number = MAX_RETRIES
+  retries: number = MAX_RETRIES,
 ): Promise<Response> {
   let lastError: Error | null = null;
 
@@ -102,7 +98,7 @@ async function fetchWithRetry(
       lastError = error as Error;
 
       if (attempt < retries - 1) {
-        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS * (attempt + 1)));
+        await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS * (attempt + 1)));
       }
     }
   }
@@ -179,5 +175,5 @@ export function isValidUrl(url?: string): boolean {
 
   // Exclude chrome:// URLs, new tab, local files, etc.
   const invalidPrefixes = ['chrome://', 'chrome-extension://', 'about:', 'file://'];
-  return !invalidPrefixes.some(prefix => url.startsWith(prefix));
+  return !invalidPrefixes.some((prefix) => url.startsWith(prefix));
 }

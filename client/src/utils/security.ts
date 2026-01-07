@@ -10,9 +10,7 @@
  * @param sender - Message sender object from chrome.runtime.onMessage
  * @returns true if sender is valid, false otherwise
  */
-export function isValidMessageSender(
-  sender: chrome.runtime.MessageSender
-): boolean {
+export function isValidMessageSender(sender: chrome.runtime.MessageSender): boolean {
   // Check if sender has an ID (messages from webpages don't have this)
   if (!sender.id) {
     console.warn('[Security] Rejected message with no sender ID');
@@ -120,7 +118,7 @@ export function sanitizeErrorMessage(error: unknown): string {
 
   // Check if error message matches any safe pattern
   const message = error.message.toLowerCase();
-  const isSafe = safePatterns.some(pattern => pattern.test(message));
+  const isSafe = safePatterns.some((pattern) => pattern.test(message));
 
   if (isSafe) {
     // Return original message for safe errors
@@ -165,7 +163,7 @@ export function isValidDOMElement(element: Element | null): element is HTMLEleme
       console.warn('[Security] Element is from a different frame context');
       return false;
     }
-  } catch (error) {
+  } catch {
     // Cross-origin access error
     console.warn('[Security] Cross-origin iframe detected');
     return false;

@@ -5,14 +5,17 @@ This directory contains HTML test pages for testing the coupon field detector in
 ## Test Files
 
 ### 1. `test-simple-form.html`
+
 **Purpose:** Test basic coupon field detection with a standard form.
 
 **Features:**
+
 - Simple form with `id="promo-code"` input field
 - Clear submit button with "Apply Code" text
 - Standard HTML structure
 
 **Expected Detection:**
+
 - Method: `attribute`
 - Confidence: 70-90
 - Should find input by `id` attribute containing "promo"
@@ -20,15 +23,18 @@ This directory contains HTML test pages for testing the coupon field detector in
 ---
 
 ### 2. `test-amazon-style.html`
+
 **Purpose:** Test detection of hidden coupon fields that appear when user clicks a toggle link.
 
 **Features:**
+
 - Hidden promo code section (similar to Amazon's checkout)
 - Toggle link to reveal the coupon field
 - Input field with `aria-label="Gift card or promo code"`
 - Mock discount codes: `SAVE10`, `SAVE20`, `FREESHIP`
 
 **Expected Detection:**
+
 - Method: `attribute` or `label`
 - Confidence: 60-80
 - Should detect field only after it becomes visible
@@ -37,15 +43,18 @@ This directory contains HTML test pages for testing the coupon field detector in
 ---
 
 ### 3. `test-dynamic-load.html`
+
 **Purpose:** Test detection of dynamically loaded coupon fields (lazy loading simulation).
 
 **Features:**
+
 - Initial page loads with basic checkout fields
 - Discount code section loads after 3 seconds (1s initial + 2s promo)
 - Input has `data-coupon-field="true"` attribute
 - Simulates real SPA/AJAX loading behavior
 
 **Expected Detection:**
+
 - Method: `attribute`
 - Confidence: 70-90
 - Should detect field after dynamic load
@@ -56,14 +65,17 @@ This directory contains HTML test pages for testing the coupon field detector in
 ---
 
 ### 4. `test-no-coupon.html`
+
 **Purpose:** Test that detector doesn't produce false positives on pages without coupon fields.
 
 **Features:**
+
 - Complete checkout form with billing information
 - Email, phone, card number, address fields
 - No coupon/promo/discount related fields
 
 **Expected Detection:**
+
 - Should return `null` result
 - Confidence: 0
 - No false positives (shouldn't mistake "card-number" for "code", etc.)
@@ -75,10 +87,12 @@ This directory contains HTML test pages for testing the coupon field detector in
 ### Manual Testing in Browser
 
 1. **Load the extension:**
+
    ```bash
    cd client
    npm run build
    ```
+
    Then load `dist/` folder in Chrome at `chrome://extensions`
 
 2. **Open test HTML files:**
@@ -157,13 +171,16 @@ To add a new test fixture:
 ## Common Issues
 
 **Issue:** Detector finds field in `test-no-coupon.html`
+
 - **Cause:** Keywords too broad or insufficient validation
 - **Fix:** Review keyword list and element validation logic
 
 **Issue:** Dynamic load test fails
+
 - **Cause:** MutationObserver not properly configured or timeout too short
 - **Fix:** Check observer setup and increase retry attempts/delay
 
 **Issue:** Amazon-style test detects hidden field
+
 - **Cause:** Visibility checking not working
 - **Fix:** Verify `isElementVisible()` checks all CSS properties correctly

@@ -27,7 +27,7 @@ export async function addToQueue(couponId: string, feedback: FeedbackRequest): P
     const now = Date.now();
 
     // Check if this coupon is already in queue
-    const existingIndex = queueData.queue.findIndex(item => item.couponId === couponId);
+    const existingIndex = queueData.queue.findIndex((item) => item.couponId === couponId);
 
     if (existingIndex >= 0) {
       // Update existing item
@@ -76,7 +76,7 @@ export async function getQueue(): Promise<QueuedFeedback[]> {
 export async function removeFromQueue(couponId: string): Promise<void> {
   try {
     const queueData = await getQueueData();
-    queueData.queue = queueData.queue.filter(item => item.couponId !== couponId);
+    queueData.queue = queueData.queue.filter((item) => item.couponId !== couponId);
     await saveQueueData(queueData);
   } catch (error) {
     console.error('Error removing feedback from queue:', error);
@@ -93,7 +93,7 @@ export async function cleanupQueue(): Promise<number> {
     const now = Date.now();
     const initialLength = queueData.queue.length;
 
-    queueData.queue = queueData.queue.filter(item => {
+    queueData.queue = queueData.queue.filter((item) => {
       // Remove if too old
       if (now - item.createdAt > QUEUE_EXPIRY_MS) {
         console.debug(`Removing expired feedback for coupon ${item.couponId}`);
@@ -162,9 +162,7 @@ export async function processQueue(maxItems: number = MAX_QUEUE_PROCESS_ITEMS): 
       try {
         const response = await Promise.race([
           sendFeedback(item.couponId, item.feedback),
-          new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error('Request timeout')), ITEM_TIMEOUT_MS)
-          ),
+          new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Request timeout')), ITEM_TIMEOUT_MS)),
         ]);
 
         if (!response || typeof response !== 'object') {
@@ -175,9 +173,9 @@ export async function processQueue(maxItems: number = MAX_QUEUE_PROCESS_ITEMS): 
 
         if (feedbackResponse.success) {
           // Success - remove from queue
-        await removeFromQueue(item.couponId);
-        results.successful++;
-        console.debug(`Successfully processed queued feedback for coupon ${item.couponId}`);
+          await removeFromQueue(item.couponId);
+          results.successful++;
+          console.debug(`Successfully processed queued feedback for coupon ${item.couponId}`);
         } else {
           // Failed - increment attempt count
           const updatedItem = {
@@ -199,9 +197,7 @@ export async function processQueue(maxItems: number = MAX_QUEUE_PROCESS_ITEMS): 
             console.warn(`Max retry attempts reached for coupon ${item.couponId}`);
           } else {
             // Update queue with new attempt count
-            const updatedQueue = queueData.queue.map(q =>
-              q.couponId === item.couponId ? updatedItem : q
-            );
+            const updatedQueue = queueData.queue.map((q) => (q.couponId === item.couponId ? updatedItem : q));
             await saveQueueData({ ...queueData, queue: updatedQueue });
             results.failed++;
           }
@@ -219,16 +215,14 @@ export async function processQueue(maxItems: number = MAX_QUEUE_PROCESS_ITEMS): 
           await removeFromQueue(item.couponId);
           results.failed++;
         } else {
-          const updatedQueue = queueData.queue.map(q =>
-            q.couponId === item.couponId ? updatedItem : q
-          );
+          const updatedQueue = queueData.queue.map((q) => (q.couponId === item.couponId ? updatedItem : q));
           await saveQueueData({ ...queueData, queue: updatedQueue });
           results.failed++;
         }
       }
 
       // Add small delay between requests to avoid rate limiting
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
     }
 
     // Update last processed timestamp

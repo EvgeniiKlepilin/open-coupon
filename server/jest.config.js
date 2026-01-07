@@ -15,12 +15,7 @@ export default {
     ],
   },
   testMatch: ['**/__tests__/**/*.test.ts'],
-  collectCoverageFrom: [
-    'src/**/*.ts',
-    '!src/**/*.d.ts',
-    '!src/generated/**',
-    '!src/index.ts',
-  ],
+  collectCoverageFrom: ['src/**/*.ts', '!src/**/*.d.ts', '!src/generated/**', '!src/index.ts'],
   coverageThreshold: {
     global: {
       branches: 75,

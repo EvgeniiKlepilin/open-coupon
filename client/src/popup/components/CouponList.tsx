@@ -148,9 +148,7 @@ export default function CouponList() {
       } catch (error) {
         // Content script not loaded - try to inject it programmatically
         if (error instanceof Error && error.message.includes('Could not establish connection')) {
-          throw new Error(
-            'Extension not ready on this page. Please refresh the page and try again.'
-          );
+          throw new Error('Extension not ready on this page. Please refresh the page and try again.');
         }
         throw error;
       }
@@ -254,19 +252,8 @@ export default function CouponList() {
             >
               {autoApplyState.isRunning ? (
                 <>
-                  <svg
-                    className="animate-spin h-5 w-5 text-white"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
+                  <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path
                       className="opacity-75"
                       fill="currentColor"
@@ -278,12 +265,7 @@ export default function CouponList() {
               ) : (
                 <>
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13 10V3L4 14h7v7l9-11h-7z"
-                    />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                   <span>Auto-Apply Best Coupon</span>
                 </>

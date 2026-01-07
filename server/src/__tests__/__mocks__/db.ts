@@ -13,4 +13,4 @@ export const db = {
     deleteMany: jest.fn(),
   },
   $disconnect: jest.fn(),
-} as any;
+} as unknown as typeof import('../../lib/db').db;

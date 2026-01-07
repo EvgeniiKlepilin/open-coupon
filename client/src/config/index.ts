@@ -90,7 +90,7 @@ export async function setApiBaseUrl(url: string): Promise<void> {
     // Validate URL format
     new URL(url); // Throws if invalid
     await chrome.storage.local.set({ apiBaseUrl: url });
-  } catch (error) {
+  } catch {
     throw new Error('Invalid API URL format');
   }
 }

@@ -21,13 +21,13 @@ export class RateLimiter {
     const now = Date.now();
 
     // Remove old requests outside window
-    this.requests = this.requests.filter(time => now - time < this.windowMs);
+    this.requests = this.requests.filter((time) => now - time < this.windowMs);
 
     if (this.requests.length >= this.maxRequests) {
       const oldestRequest = this.requests[0];
       const waitTime = this.windowMs - (now - oldestRequest);
       throw new Error(
-        `Rate limit exceeded. Maximum ${this.maxRequests} requests per ${this.windowMs / 1000}s. Try again in ${Math.ceil(waitTime / 1000)}s`
+        `Rate limit exceeded. Maximum ${this.maxRequests} requests per ${this.windowMs / 1000}s. Try again in ${Math.ceil(waitTime / 1000)}s`,
       );
     }
 
@@ -39,11 +39,9 @@ export class RateLimiter {
    */
   getStats(): { current: number; max: number; resetIn: number } {
     const now = Date.now();
-    this.requests = this.requests.filter(time => now - time < this.windowMs);
+    this.requests = this.requests.filter((time) => now - time < this.windowMs);
 
-    const resetIn = this.requests.length > 0
-      ? this.windowMs - (now - this.requests[0])
-      : 0;
+    const resetIn = this.requests.length > 0 ? this.windowMs - (now - this.requests[0]) : 0;
 
     return {
       current: this.requests.length,

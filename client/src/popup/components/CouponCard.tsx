@@ -8,6 +8,7 @@ interface CouponCardProps {
 
 export default function CouponCard({ coupon, onCopy }: CouponCardProps) {
   const [isCopied, setIsCopied] = useState(false);
+  const [now] = useState(() => Date.now());
 
   const totalAttempts = coupon.successCount + coupon.failureCount;
   const successRate = totalAttempts > 0 ? (coupon.successCount / totalAttempts) * 100 : 0;
@@ -21,14 +22,13 @@ export default function CouponCard({ coupon, onCopy }: CouponCardProps) {
   const isExpiringSoon = (): boolean => {
     if (!coupon.expiryDate) return false;
     const expiryTime = new Date(coupon.expiryDate).getTime();
-    const now = Date.now();
     const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
     return expiryTime - now < sevenDaysInMs && expiryTime > now;
   };
 
   const isExpired = (): boolean => {
     if (!coupon.expiryDate) return false;
-    return new Date(coupon.expiryDate).getTime() < Date.now();
+    return new Date(coupon.expiryDate).getTime() < now;
   };
 
   const handleCopy = async (): Promise<void> => {

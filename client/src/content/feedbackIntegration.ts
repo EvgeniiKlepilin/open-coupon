@@ -15,10 +15,7 @@ import { addToQueue } from '@/utils/feedbackQueue';
  * @param domain - Current retailer domain
  * @returns Promise resolving to number of feedback items sent
  */
-export async function submitAutoApplyFeedback(
-  result: ApplierResult,
-  domain: string
-): Promise<number> {
+export async function submitAutoApplyFeedback(result: ApplierResult, domain: string): Promise<number> {
   // Check if feedback is enabled
   const feedbackEnabled = await isFeedbackEnabled();
   if (!feedbackEnabled) {
@@ -27,7 +24,7 @@ export async function submitAutoApplyFeedback(
   }
 
   // Filter out uncertain results (timeout with no clear success/failure)
-  const validResults = result.allResults.filter(testResult => {
+  const validResults = result.allResults.filter((testResult) => {
     // Only send feedback for clear success or failure
     if (testResult.success) return true;
     if (testResult.failureReason && !testResult.failureReason.includes('Timeout')) return true;
@@ -42,7 +39,7 @@ export async function submitAutoApplyFeedback(
   console.debug(`[Feedback] Preparing to submit feedback for ${validResults.length} coupons`);
 
   // Convert test results to batch feedback format
-  const feedbackItems: BatchFeedbackItem[] = validResults.map(testResult => ({
+  const feedbackItems: BatchFeedbackItem[] = validResults.map((testResult) => ({
     couponId: testResult.couponId,
     ...testResultToFeedback(testResult, domain),
   }));
@@ -60,7 +57,7 @@ export async function submitAutoApplyFeedback(
       for (const itemResult of response.results) {
         if (!itemResult.success) {
           // Find the original feedback item
-          const feedbackItem = feedbackItems.find(item => item.couponId === itemResult.couponId);
+          const feedbackItem = feedbackItems.find((item) => item.couponId === itemResult.couponId);
           if (feedbackItem) {
             await addToQueue(itemResult.couponId, {
               success: feedbackItem.success,
@@ -96,10 +93,7 @@ export async function submitAutoApplyFeedback(
  * @param domain - Current retailer domain
  * @returns Promise resolving to true if successfully sent
  */
-export async function submitSingleFeedback(
-  testResult: CouponTestResult,
-  domain: string
-): Promise<boolean> {
+export async function submitSingleFeedback(testResult: CouponTestResult, domain: string): Promise<boolean> {
   // Check if feedback is enabled
   const feedbackEnabled = await isFeedbackEnabled();
   if (!feedbackEnabled) {

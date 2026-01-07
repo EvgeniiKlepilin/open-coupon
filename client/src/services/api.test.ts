@@ -1,11 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import {
-  fetchCouponsForDomain,
-  getCurrentTab,
-  extractHostname,
-  isValidUrl,
-} from './api';
-import { mockCoupons, mockTab, mockInvalidTab } from '../test/mockData';
+import { fetchCouponsForDomain, getCurrentTab, extractHostname, isValidUrl } from './api';
+import { mockCoupons, mockTab } from '../test/mockData';
 import { mockFetch, mockFetchError, mockChromeStorage, mockChromeTabs } from '../test/testUtils';
 
 describe('API Service', () => {
@@ -63,7 +58,7 @@ describe('API Service', () => {
     });
 
     it('should return null on error', async () => {
-      (chrome.tabs.query as any).mockRejectedValue(new Error('Query failed'));
+      vi.mocked(chrome.tabs.query).mockRejectedValue(new Error('Query failed'));
       const tab = await getCurrentTab();
       expect(tab).toBe(null);
     });
@@ -79,7 +74,7 @@ describe('API Service', () => {
 
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining(`/coupons?domain=${domain}`),
-        expect.any(Object)
+        expect.any(Object),
       );
       expect(coupons).toEqual(mockCoupons);
     });
@@ -163,7 +158,7 @@ describe('API Service', () => {
             data: mockCoupons,
             timestamp: expect.any(Number),
           }),
-        })
+        }),
       );
     });
   });

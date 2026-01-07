@@ -22,7 +22,7 @@ import type { FeedbackMetadata } from '../validators/feedback.validator.js';
 export async function recordCouponFeedback(
   couponId: string,
   success: boolean,
-  metadata?: FeedbackMetadata
+  _metadata?: FeedbackMetadata,
 ): Promise<Coupon> {
   // Validate UUID format
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -77,7 +77,7 @@ export async function recordBatchCouponFeedback(
     couponId: string;
     success: boolean;
     metadata?: FeedbackMetadata;
-  }>
+  }>,
 ): Promise<{
   processed: number;
   failed: number;

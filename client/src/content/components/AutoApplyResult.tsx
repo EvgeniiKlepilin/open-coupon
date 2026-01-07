@@ -7,15 +7,17 @@ interface AutoApplyResultProps {
 }
 
 export default function AutoApplyResult({ result, onClose }: AutoApplyResultProps) {
-  const [isVisible, setIsVisible] = useState(false);
+  const [shouldHide, setShouldHide] = useState(false);
 
   useEffect(() => {
-    if (result) {
-      setIsVisible(true);
-    } else {
-      const timeout = setTimeout(() => setIsVisible(false), 300);
+    if (!result) {
+      const timeout = setTimeout(() => setShouldHide(true), 300);
       return () => clearTimeout(timeout);
     }
+
+    // Reset shouldHide asynchronously when result appears
+    const resetTimeout = setTimeout(() => setShouldHide(false), 0);
+    return () => clearTimeout(resetTimeout);
   }, [result]);
 
   useEffect(() => {
@@ -28,7 +30,7 @@ export default function AutoApplyResult({ result, onClose }: AutoApplyResultProp
     }
   }, [result, onClose]);
 
-  if (!isVisible || !result) return null;
+  if (!result || shouldHide) return null;
 
   const isSuccess = result.bestCoupon && result.bestCoupon.discountAmount > 0;
   const isError = !!result.errorMessage;
@@ -183,8 +185,8 @@ export default function AutoApplyResult({ result, onClose }: AutoApplyResultProp
               textAlign: 'center',
             }}
           >
-            We tested {result.tested} coupon{result.tested !== 1 ? 's' : ''}, but none provided
-            a discount for this purchase.
+            We tested {result.tested} coupon{result.tested !== 1 ? 's' : ''}, but none provided a discount for this
+            purchase.
           </p>
           <div
             style={{
@@ -229,8 +231,8 @@ export default function AutoApplyResult({ result, onClose }: AutoApplyResultProp
               textAlign: 'center',
             }}
           >
-            Tested {result.tested} of {result.tested + (result.allResults.length - result.tested)}{' '}
-            coupons before cancellation.
+            Tested {result.tested} of {result.tested + (result.allResults.length - result.tested)} coupons before
+            cancellation.
           </p>
           {result.bestCoupon && result.bestCoupon.discountAmount > 0 && (
             <div

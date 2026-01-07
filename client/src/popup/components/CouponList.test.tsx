@@ -83,9 +83,10 @@ describe('CouponList', () => {
       render(<CouponList />);
 
       await waitFor(() => {
-        const couponCodes = screen.getAllByRole('button', { name: /copy/i })
-          .map(btn => btn.closest('.bg-white'))
-          .map(card => card?.querySelector('code')?.textContent);
+        const couponCodes = screen
+          .getAllByRole('button', { name: /copy/i })
+          .map((btn) => btn.closest('.bg-white'))
+          .map((card) => card?.querySelector('code')?.textContent);
 
         // Should be sorted by successCount (200, 150, 80, 50)
         expect(couponCodes[0]).toBe('EXPIRED10'); // 200 success
@@ -227,5 +228,4 @@ describe('CouponList', () => {
       expect(svg).toHaveClass('animate-spin');
     });
   });
-
 });

@@ -543,7 +543,7 @@ describe('Detector Module', () => {
         <input id="promo-code" type="text" />
       `;
 
-      const result1 = await findCouponElements();
+      await findCouponElements();
 
       // Change DOM
       document.body.innerHTML = '<div></div>';

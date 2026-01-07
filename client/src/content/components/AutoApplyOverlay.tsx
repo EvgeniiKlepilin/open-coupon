@@ -17,19 +17,21 @@ export default function AutoApplyOverlay({
   bestDiscount = 0,
   onCancel,
 }: AutoApplyOverlayProps) {
-  const [isVisible, setIsVisible] = useState(false);
+  const [shouldHide, setShouldHide] = useState(false);
 
   useEffect(() => {
-    if (isActive) {
-      setIsVisible(true);
-    } else {
+    if (!isActive) {
       // Delay hiding to allow fade-out animation
-      const timeout = setTimeout(() => setIsVisible(false), 300);
+      const timeout = setTimeout(() => setShouldHide(true), 300);
       return () => clearTimeout(timeout);
     }
+
+    // Reset shouldHide asynchronously when becoming active
+    const resetTimeout = setTimeout(() => setShouldHide(false), 0);
+    return () => clearTimeout(resetTimeout);
   }, [isActive]);
 
-  if (!isVisible) return null;
+  if (!isActive && shouldHide) return null;
 
   const progress = totalCoupons > 0 ? (currentIndex / totalCoupons) * 100 : 0;
 

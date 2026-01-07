@@ -32,6 +32,7 @@ graph TB
 ### Component Breakdown
 
 #### 1. **Content Scripts** (`src/content/`)
+
 The core auto-apply engine that runs on e-commerce checkout pages.
 
 - **`detector.ts`**: Multi-strategy coupon field detection
@@ -60,6 +61,7 @@ The core auto-apply engine that runs on e-commerce checkout pages.
   - Respects rate limits
 
 #### 2. **Background Service Worker** (`src/background/`)
+
 Long-lived background process for extension-wide tasks.
 
 - **`service-worker.ts`**:
@@ -69,6 +71,7 @@ Long-lived background process for extension-wide tasks.
   - Cleans up expired cache entries
 
 #### 3. **Popup UI** (`src/popup/`)
+
 User interface displayed when clicking the extension icon.
 
 - **`Popup.tsx`**: Main popup component
@@ -83,6 +86,7 @@ User interface displayed when clicking the extension icon.
   - `AutoApplyResult.tsx`: Results modal showing best coupon found
 
 #### 4. **Services** (`src/services/`)
+
 API communication layer.
 
 - **`api.ts`**: Backend API client
@@ -97,6 +101,7 @@ API communication layer.
   - Queues failed submissions
 
 #### 5. **Utils** (`src/utils/`)
+
 Shared utilities and security functions.
 
 - **`security.ts`**: Security validation utilities
@@ -172,23 +177,27 @@ client/
 ### Installation
 
 1. **Install dependencies**
+
    ```bash
    cd client
    npm install
    ```
 
 2. **Configure environment**
+
    ```bash
    cp .env.example .env
    ```
 
    Edit `.env`:
+
    ```bash
    VITE_API_BASE_URL=http://localhost:3030/api/v1
    VITE_ENV=development
    ```
 
 3. **Start development build**
+
    ```bash
    npm run dev
    ```
@@ -245,20 +254,25 @@ To reload the extension after code changes:
 OpenCoupon implements multiple security layers to protect users:
 
 ### 1. **Minimal Permissions** (Manifest V3)
+
 Only requests necessary permissions:
+
 - `activeTab`: Access current tab when user clicks extension
 - `storage`: Store user preferences and queue
 - `alarms`: Background queue processing
 - `sidePanel`: Display side panel UI
 
 **No access to**:
+
 - Browsing history
 - All tabs (only active tab)
 - File system
 - Other extensions
 
 ### 2. **Message Sender Validation**
+
 All messages between components are validated:
+
 ```typescript
 if (!isValidMessageSender(sender)) {
   // Reject messages from unauthorized sources
@@ -267,7 +281,9 @@ if (!isValidMessageSender(sender)) {
 ```
 
 ### 3. **DOM Element Validation**
+
 Prevents XSS attacks by validating DOM elements:
+
 ```typescript
 if (!isValidDOMElement(element)) {
   // Reject cross-origin or malicious elements
@@ -276,18 +292,24 @@ if (!isValidDOMElement(element)) {
 ```
 
 ### 4. **Input Sanitization**
+
 All user inputs and API responses are validated:
+
 - API responses validated with Zod schemas
 - Error messages sanitized to prevent info disclosure
 - Coupon codes sanitized before DOM insertion
 
 ### 5. **Rate Limiting**
+
 Client-side rate limiting prevents API abuse:
+
 - API requests: 20 per minute
 - Feedback submissions: 50 per minute
 
 ### 6. **Environment-Based Configuration**
+
 API URLs are environment-specific:
+
 - Development: `http://localhost:3030/api/v1`
 - Production: `https://api.opencoupon.com/api/v1`
 
@@ -300,6 +322,7 @@ No hardcoded URLs in source code.
 Tests are written with **Vitest** and **React Testing Library**.
 
 **Example test** (`detector.test.ts`):
+
 ```typescript
 describe('findCouponElements', () => {
   it('should detect coupon input by id attribute', async () => {
@@ -343,11 +366,13 @@ npm run test:ui
 ### Production Build
 
 1. **Update environment**
+
    ```bash
    cp .env.production .env
    ```
 
 2. **Build extension**
+
    ```bash
    npm run build
    ```
@@ -360,6 +385,7 @@ npm run test:ui
 ### Publishing to Chrome Web Store
 
 1. **Create ZIP file**
+
    ```bash
    cd dist
    zip -r ../opencoupon-extension.zip .
@@ -380,6 +406,7 @@ npm run test:ui
 ### Version Management
 
 Update version in `manifest.config.ts` before each release:
+
 ```typescript
 version: '1.2.0', // Follow semver
 ```
@@ -389,16 +416,19 @@ version: '1.2.0', // Follow semver
 ### Chrome DevTools
 
 **Content Scripts**:
+
 1. Right-click on webpage → "Inspect"
 2. Go to "Sources" tab
 3. Find extension files under `Content Scripts`
 4. Set breakpoints and debug
 
 **Popup**:
+
 1. Right-click extension icon → "Inspect popup"
 2. Debug React components with React DevTools
 
 **Background Worker**:
+
 1. Go to `chrome://extensions/`
 2. Find OpenCoupon
 3. Click "service worker" link
@@ -407,6 +437,7 @@ version: '1.2.0', // Follow semver
 ### Console Logging
 
 All components use prefixed logging:
+
 - `[OpenCoupon]` - General messages
 - `[Detector]` - Coupon field detection
 - `[Applier]` - Auto-apply loop
@@ -415,6 +446,7 @@ All components use prefixed logging:
 - `[Security]` - Security validations
 
 **Example**:
+
 ```typescript
 console.log('[OpenCoupon] Starting auto-apply with', coupons.length, 'coupons');
 ```
@@ -422,15 +454,19 @@ console.log('[OpenCoupon] Starting auto-apply with', coupons.length, 'coupons');
 ### Common Issues
 
 **Issue**: Extension not loading
+
 - **Fix**: Check `manifest.config.ts` syntax errors. Run `npm run build` and check console.
 
 **Issue**: Content script not injecting
+
 - **Fix**: Verify `matches` pattern in `manifest.config.ts`. Refresh webpage after loading extension.
 
 **Issue**: API requests failing
+
 - **Fix**: Check `.env` file has correct `VITE_API_BASE_URL`. Verify backend server is running.
 
 **Issue**: Coupon field not detected
+
 - **Fix**: Open DevTools → Console. Look for `[Detector]` logs. Inspect page HTML to identify field selectors.
 
 ## Contributing

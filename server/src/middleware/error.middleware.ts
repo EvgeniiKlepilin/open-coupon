@@ -22,23 +22,17 @@ interface ErrorResponse {
  * @param err - Error object
  * @param req - Express request object
  * @param res - Express response object
- * @param next - Express next function
+ * @param _next - Express next function (unused but required by Express signature)
  */
-export function errorHandler(
-  err: Error | AppError,
-  req: Request,
-  res: Response,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  next: NextFunction,
-): void {
+export function errorHandler(err: Error | AppError, req: Request, res: Response, _next: NextFunction): void {
   // Default to 500 Internal Server Error
   let statusCode = 500;
   let message = 'Internal Server Error';
 
   // If it's an operational error we defined, use its properties
   // Check for statusCode property first (more reliable than instanceof in some environments)
-  if ('statusCode' in err && typeof (err as any).statusCode === 'number') {
-    statusCode = (err as any).statusCode;
+  if ('statusCode' in err && typeof (err as AppError).statusCode === 'number') {
+    statusCode = (err as AppError).statusCode;
     message = err.message;
   } else if (err instanceof AppError) {
     statusCode = err.statusCode;
@@ -58,7 +52,7 @@ export function errorHandler(
   });
 
   // Build error response with flat structure
-  const errorResponse: any = {
+  const errorResponse: ErrorResponse = {
     success: false,
     error: message,
   };

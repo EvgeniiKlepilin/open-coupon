@@ -132,12 +132,8 @@ describe('API Integration Tests', () => {
       expect(response.body.data).toHaveLength(3);
 
       // Verify coupons are ordered by successCount DESC
-      expect(response.body.data[0].successCount).toBeGreaterThanOrEqual(
-        response.body.data[1].successCount
-      );
-      expect(response.body.data[1].successCount).toBeGreaterThanOrEqual(
-        response.body.data[2].successCount
-      );
+      expect(response.body.data[0].successCount).toBeGreaterThanOrEqual(response.body.data[1].successCount);
+      expect(response.body.data[1].successCount).toBeGreaterThanOrEqual(response.body.data[2].successCount);
     });
 
     it('should return coupons with correct structure', async () => {
@@ -168,9 +164,7 @@ describe('API Integration Tests', () => {
     });
 
     it('should handle full URL with path', async () => {
-      const response = await request(app).get(
-        '/api/v1/coupons?domain=https://www.teststore.com/products'
-      );
+      const response = await request(app).get('/api/v1/coupons?domain=https://www.teststore.com/products');
 
       expect(response.status).toBe(200);
       expect(response.body.data).toHaveLength(3);

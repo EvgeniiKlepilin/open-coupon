@@ -38,7 +38,6 @@ export default class AutoApplyManager {
   private totalCoupons = 0;
   private bestDiscount = 0;
 
-
   init(): void {
     // Create overlay container
     this.overlayContainer = document.createElement('div');
@@ -144,7 +143,7 @@ export default class AutoApplyManager {
         '[OpenCoupon] Coupon field detected with',
         detection.confidence,
         'confidence via',
-        detection.detectionMethod
+        detection.detectionMethod,
       );
 
       // Step 2: Run auto-apply
@@ -164,9 +163,7 @@ export default class AutoApplyManager {
         onCouponTested: (testResult: CouponTestResult) => {
           console.log(
             `[OpenCoupon] ${testResult.success ? '✅' : '❌'} ${testResult.code}:`,
-            testResult.success
-              ? `Saved $${testResult.discountAmount.toFixed(2)}`
-              : testResult.failureReason
+            testResult.success ? `Saved $${testResult.discountAmount.toFixed(2)}` : testResult.failureReason,
           );
 
           // Update best discount
@@ -244,7 +241,7 @@ export default class AutoApplyManager {
           bestDiscount={this.bestDiscount}
           onCancel={() => this.handleCancel()}
         />
-      </StrictMode>
+      </StrictMode>,
     );
   }
 
@@ -259,7 +256,7 @@ export default class AutoApplyManager {
             this.renderResult(null);
           }}
         />
-      </StrictMode>
+      </StrictMode>,
     );
   }
 }

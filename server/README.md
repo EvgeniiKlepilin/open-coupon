@@ -30,6 +30,7 @@ graph TD
 ### Component Breakdown
 
 #### 1. **Routes** (`src/routes/`)
+
 HTTP endpoint definitions using Express Router.
 
 - **`coupon.routes.ts`**: All API endpoints
@@ -38,6 +39,7 @@ HTTP endpoint definitions using Express Router.
   - `POST /api/v1/coupons/feedback/batch` - Submit batch feedback
 
 #### 2. **Controllers** (`src/controllers/`)
+
 Request validation and response formatting.
 
 - **`coupon.controller.ts`**:
@@ -46,6 +48,7 @@ Request validation and response formatting.
   - `submitBatchCouponFeedback()` - Validates batch feedback payload
 
 #### 3. **Services** (`src/services/`)
+
 Business logic and data processing.
 
 - **`coupon.service.ts`**:
@@ -59,9 +62,11 @@ Business logic and data processing.
   - `calculateSuccessRate()` - Calculates percentage success rate
 
 #### 4. **Validators** (`src/validators/`)
+
 Zod schemas for request validation.
 
 - **`feedback.validator.ts`**:
+
   ```typescript
   const feedbackRequestSchema = z.object({
     success: z.boolean(),
@@ -82,6 +87,7 @@ Zod schemas for request validation.
   ```
 
 #### 5. **Middleware** (`src/middleware/`)
+
 Express middleware for cross-cutting concerns.
 
 - **`error.middleware.ts`**: Global error handling
@@ -96,6 +102,7 @@ Express middleware for cross-cutting concerns.
   - Returns 429 Too Many Requests with Retry-After header
 
 #### 6. **Library** (`src/lib/`)
+
 Core utilities and database client.
 
 - **`errors.ts`**: Custom error classes
@@ -170,6 +177,7 @@ model Retailer {
 ```
 
 **Key Features:**
+
 - `selectorConfig`: Stores retailer-specific DOM selectors (e.g., `{"input": "#promo-code", "submit": ".btn-apply"}`)
 - `isActive`: Allows disabling retailers without deletion
 - Indexed by `domain` for fast lookups
@@ -199,6 +207,7 @@ model Coupon {
 ```
 
 **Key Features:**
+
 - Atomic updates prevent race conditions on counts
 - `lastSuccessAt` helps sort "fresh" coupons
 - `lastTestedAt` helps identify stale coupons
@@ -212,6 +221,7 @@ model Coupon {
 Health check endpoint.
 
 **Response:**
+
 ```json
 {
   "status": "ok"
@@ -223,9 +233,11 @@ Health check endpoint.
 Fetch coupons for a specific domain.
 
 **Query Parameters:**
+
 - `domain` (required): Website domain (e.g., "nike.com", "https://www.nike.com", "www.nike.com")
 
 **Response:**
+
 ```json
 {
   "data": [
@@ -250,6 +262,7 @@ Fetch coupons for a specific domain.
 **Sorting**: Coupons are sorted by `successCount` (descending) - most successful first.
 
 **Error Responses:**
+
 - `400 Bad Request` - Missing or invalid domain parameter
 - `404 Not Found` - No retailer found for domain or retailer is inactive
 
@@ -258,14 +271,16 @@ Fetch coupons for a specific domain.
 Submit feedback for a single coupon test.
 
 **URL Parameters:**
+
 - `id` (required): UUID of the coupon
 
 **Request Body:**
+
 ```json
 {
   "success": true,
   "metadata": {
-    "discountAmount": 15.50,
+    "discountAmount": 15.5,
     "discountPercentage": 20,
     "domain": "nike.com",
     "testDurationMs": 1250,
@@ -276,6 +291,7 @@ Submit feedback for a single coupon test.
 ```
 
 **Metadata Fields (all optional except domain, testDurationMs, detectionMethod, testedAt):**
+
 - `discountAmount`: Dollar amount saved (e.g., 15.50)
 - `discountPercentage`: Percentage discount (0-100)
 - `failureReason`: Enum - "expired" | "invalid" | "minimum-not-met" | "out-of-stock" | "other"
@@ -286,6 +302,7 @@ Submit feedback for a single coupon test.
 - `testedAt`: ISO 8601 timestamp when coupon was tested (required)
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -304,6 +321,7 @@ Submit feedback for a single coupon test.
 **Rate Limit:** 100 requests per hour per IP
 
 **Error Responses:**
+
 - `400 Bad Request` - Invalid request body or coupon ID format
 - `404 Not Found` - Coupon not found
 - `429 Too Many Requests` - Rate limit exceeded (includes Retry-After header)
@@ -313,6 +331,7 @@ Submit feedback for a single coupon test.
 Submit feedback for multiple coupons in a single request (efficient for auto-apply loops).
 
 **Request Body:**
+
 ```json
 {
   "feedback": [
@@ -320,7 +339,7 @@ Submit feedback for multiple coupons in a single request (efficient for auto-app
       "couponId": "550e8400-e29b-41d4-a716-446655440000",
       "success": true,
       "metadata": {
-        "discountAmount": 15.50,
+        "discountAmount": 15.5,
         "domain": "nike.com",
         "testDurationMs": 1250,
         "detectionMethod": "price-change",
@@ -343,10 +362,12 @@ Submit feedback for multiple coupons in a single request (efficient for auto-app
 ```
 
 **Constraints:**
+
 - Minimum 1 feedback item
 - Maximum 100 feedback items per batch
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -367,6 +388,7 @@ Submit feedback for multiple coupons in a single request (efficient for auto-app
 ```
 
 **If some items fail:**
+
 ```json
 {
   "success": true,
@@ -390,6 +412,7 @@ Submit feedback for multiple coupons in a single request (efficient for auto-app
 **Rate Limit:** 50 requests per hour per IP (stricter due to batch size)
 
 **Error Responses:**
+
 - `400 Bad Request` - Invalid request body (validation error details included)
 - `429 Too Many Requests` - Rate limit exceeded
 
@@ -404,23 +427,27 @@ Submit feedback for multiple coupons in a single request (efficient for auto-app
 ### Installation
 
 1. **Install dependencies**
+
    ```bash
    cd server
    npm install
    ```
 
 2. **Start PostgreSQL database**
+
    ```bash
    # From project root
    docker compose up -d
    ```
 
 3. **Configure environment**
+
    ```bash
    cp .env.example .env
    ```
 
    Edit `.env`:
+
    ```bash
    DATABASE_URL="postgresql://user:password@localhost:5432/opencoupon?schema=public"
    PORT=3030
@@ -428,16 +455,19 @@ Submit feedback for multiple coupons in a single request (efficient for auto-app
    ```
 
 4. **Run database migrations**
+
    ```bash
    npx prisma migrate dev
    ```
 
 5. **Seed database** (optional - adds sample retailers and coupons)
+
    ```bash
    npm run seed
    ```
 
 6. **Start development server**
+
    ```bash
    npm run dev
    ```
@@ -488,6 +518,7 @@ npx tsc --noEmit
 Test individual services and utilities in isolation.
 
 **Example** (`coupon.service.test.ts`):
+
 ```typescript
 describe('CouponService', () => {
   describe('getCouponsByDomain', () => {
@@ -497,14 +528,14 @@ describe('CouponService', () => {
     });
 
     it('should throw NotFoundError for invalid domain', async () => {
-      await expect(getCouponsByDomain('invalid.com'))
-        .rejects.toThrow(NotFoundError);
+      await expect(getCouponsByDomain('invalid.com')).rejects.toThrow(NotFoundError);
     });
   });
 });
 ```
 
 **Example** (`feedback.service.test.ts`):
+
 ```typescript
 describe('FeedbackService', () => {
   describe('recordCouponFeedback', () => {
@@ -521,20 +552,17 @@ describe('FeedbackService', () => {
 Test full API endpoints with database.
 
 **Example** (`api.test.ts`):
+
 ```typescript
 describe('GET /api/v1/coupons', () => {
   it('should return 200 with coupons for valid domain', async () => {
-    const response = await request(app)
-      .get('/api/v1/coupons?domain=nike.com')
-      .expect(200);
+    const response = await request(app).get('/api/v1/coupons?domain=nike.com').expect(200);
 
     expect(response.body.data).toBeInstanceOf(Array);
   });
 
   it('should return 400 for missing domain', async () => {
-    await request(app)
-      .get('/api/v1/coupons')
-      .expect(400);
+    await request(app).get('/api/v1/coupons').expect(400);
   });
 });
 ```
@@ -597,6 +625,7 @@ npm run seed
 ```
 
 Seeds:
+
 - 10 popular retailers (Nike, Amazon, Target, etc.)
 - 50+ coupons across all retailers
 - Realistic success/failure counts
@@ -607,6 +636,7 @@ Seeds:
 ### Production Build
 
 1. **Set environment variables**
+
    ```bash
    export NODE_ENV=production
    export DATABASE_URL="postgresql://user:pass@host:5432/db"
@@ -614,21 +644,25 @@ Seeds:
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm ci --only=production
    ```
 
 3. **Generate Prisma Client**
+
    ```bash
    npx prisma generate
    ```
 
 4. **Run migrations**
+
    ```bash
    npx prisma migrate deploy
    ```
 
 5. **Build TypeScript**
+
    ```bash
    npm run build
    ```
@@ -641,6 +675,7 @@ Seeds:
 ### Docker Deployment
 
 **Dockerfile**:
+
 ```dockerfile
 FROM node:20-alpine
 WORKDIR /app
@@ -663,6 +698,7 @@ CMD ["npm", "start"]
 ```
 
 **Build and run**:
+
 ```bash
 docker build -t opencoupon-api .
 docker run -p 3030:3030 --env-file .env opencoupon-api
@@ -683,6 +719,7 @@ PORT=3030
 ### Input Validation
 
 All inputs validated with Zod schemas:
+
 - Type checking (boolean, number, string, UUID)
 - Length limits (max 100 items per batch)
 - Format validation (UUID, datetime, enum values)
@@ -691,6 +728,7 @@ All inputs validated with Zod schemas:
 ### Rate Limiting
 
 API endpoints are rate-limited per IP address:
+
 - Feedback endpoint: 100 requests per hour
 - Batch feedback endpoint: 50 requests per hour
 - Returns 429 with `Retry-After: 3600` header when exceeded
@@ -736,6 +774,7 @@ GET /health
 ```
 
 Returns:
+
 ```json
 {
   "status": "ok"

@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen } from '@testing-library/react';
 import CouponCard from './CouponCard';
 import { mockCoupons } from '../../test/mockData';
 
@@ -34,7 +33,7 @@ describe('CouponCard', () => {
 
   it('should display green badge for high success rate (>50%)', () => {
     const coupon = mockCoupons[0]; // 93.75% success
-    const { container } = render(<CouponCard coupon={coupon} onCopy={onCopy} />);
+    render(<CouponCard coupon={coupon} onCopy={onCopy} />);
 
     const badge = screen.getByText(/94% success/);
     expect(badge).toHaveClass('bg-green-100', 'text-green-800');
@@ -42,7 +41,7 @@ describe('CouponCard', () => {
 
   it('should display yellow badge for medium success rate (25-50%)', () => {
     const coupon = mockCoupons[1]; // 80 success, 120 failure = 40%
-    const { container } = render(<CouponCard coupon={coupon} onCopy={onCopy} />);
+    render(<CouponCard coupon={coupon} onCopy={onCopy} />);
 
     const badge = screen.getByText(/40% success/);
     expect(badge).toHaveClass('bg-yellow-100', 'text-yellow-800');

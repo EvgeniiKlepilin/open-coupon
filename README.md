@@ -1,9 +1,9 @@
 <div align="center">
   <img src="client/src/assets/logo.png" alt="OpenCoupon Logo" width="200"/>
 
-  # OpenCoupon
+# OpenCoupon
 
-  ### Open-Source Framework for Building Transparent Coupon Browser Extensions
+### Open-Source Framework for Building Transparent Coupon Browser Extensions
 
   <p>
     <strong>Build transparent, user-first coupon extensions without predatory practices!</strong><br/>
@@ -11,20 +11,20 @@
     designed with ethics, privacy, and transparency at its core.
   </p>
 
-  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-  [![Ethics First](https://img.shields.io/badge/Ethics-First-purple.svg)](#️-ethical-considerations)
-  [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)](https://www.typescriptlang.org/)
-  [![React](https://img.shields.io/badge/React-19.1-61dafb.svg)](https://reactjs.org/)
-  [![Node](https://img.shields.io/badge/Node-20+-green.svg)](https://nodejs.org/)
-  [![Tests](https://img.shields.io/badge/Tests-58%20Passing-success.svg)](https://github.com/EvgeniiKlepilin/open-coupon)
-  [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/EvgeniiKlepilin/open-coupon/pulls)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Ethics First](https://img.shields.io/badge/Ethics-First-purple.svg)](#️-ethical-considerations)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-19.1-61dafb.svg)](https://reactjs.org/)
+[![Node](https://img.shields.io/badge/Node-20+-green.svg)](https://nodejs.org/)
+[![Tests](https://img.shields.io/badge/Tests-58%20Passing-success.svg)](https://github.com/EvgeniiKlepilin/open-coupon)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/EvgeniiKlepilin/open-coupon/pulls)
 
-  [Features](#-features) •
-  [Quick Start](#-quick-start) •
-  [Documentation](#-documentation) •
-  [Architecture](#-architecture) •
-  [Ethical Guidelines](#-ethical-considerations) •
-  [Contributing](#-contributing)
+[Features](#-features) •
+[Quick Start](#-quick-start) •
+[Documentation](#-documentation) •
+[Architecture](#-architecture) •
+[Ethical Guidelines](#-ethical-considerations) •
+[Contributing](#-contributing)
 
 </div>
 
@@ -57,6 +57,7 @@ OpenCoupon is an **open-source, ethical framework** for building browser extensi
 ## ✨ Features
 
 ### 🎨 User Features
+
 - **Automatic Coupon Detection**: Intelligently finds coupon input fields on checkout pages
 - **Auto-Apply Loop**: Tests all available coupons to find the best discount
 - **Real-Time Progress**: Beautiful UI showing coupon testing progress
@@ -65,6 +66,7 @@ OpenCoupon is an **open-source, ethical framework** for building browser extensi
 - **Privacy-Focused**: No personal data collection, anonymous usage stats only
 
 ### 🔧 Developer Features
+
 - **Chrome Extension Manifest V3**: Latest extension standards
 - **Content Scripts**: DOM manipulation with safety checks
 - **Background Service Workers**: Reliable background processing
@@ -89,17 +91,20 @@ OpenCoupon is an **open-source, ethical framework** for building browser extensi
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/EvgeniiKlepilin/open-coupon.git
    cd open-coupon
    ```
 
 2. **Start the database** (PostgreSQL in Docker)
+
    ```bash
    docker compose up -d
    ```
 
 3. **Set up the backend**
+
    ```bash
    cd server
    npm install
@@ -108,6 +113,7 @@ OpenCoupon is an **open-source, ethical framework** for building browser extensi
    ```
 
 4. **Set up the frontend** (in a new terminal)
+
    ```bash
    cd client
    npm install
@@ -134,6 +140,7 @@ OpenCoupon is an **open-source, ethical framework** for building browser extensi
 ## 📚 Documentation
 
 ### Component READMEs
+
 - **[Frontend Documentation](./client/README.md)** - Chrome Extension setup, architecture, and development
 - **[Backend Documentation](./server/README.md)** - API endpoints, database schema, and deployment
 
@@ -163,7 +170,7 @@ OpenCoupon is an **open-source, ethical framework** for building browser extensi
    - Send anonymous feedback to backend
    - Update success/failure counts
    - Improve future recommendations
-</details>
+   </details>
 
 <details>
 <summary><b>Security Features</b></summary>
@@ -181,6 +188,7 @@ OpenCoupon is an **open-source, ethical framework** for building browser extensi
 <summary><b>Tech Stack</b></summary>
 
 **Frontend (Chrome Extension)**
+
 - React 19 with TypeScript 5
 - Vite 7 for building
 - Tailwind CSS for styling
@@ -188,6 +196,7 @@ OpenCoupon is an **open-source, ethical framework** for building browser extensi
 - Vitest for testing
 
 **Backend (API Server)**
+
 - Node.js 20+ with Express 5
 - TypeScript 5
 - Prisma ORM
@@ -196,6 +205,7 @@ OpenCoupon is an **open-source, ethical framework** for building browser extensi
 - Jest for testing
 
 **DevOps**
+
 - Docker & Docker Compose
 - ESLint + Prettier
 - Husky for pre-commit hooks
@@ -265,6 +275,7 @@ Developers using this framework should adhere to the following ethical guideline
 ### 1. Fair Attribution & "Stand Down" Policy
 
 **Respect Content Creators**
+
 - ❌ **No Cookie Stuffing**: If a user has already clicked an influencer's affiliate link, your extension **must stand down** and not overwrite that cookie with its own
 - ✅ **Transparent Rewards**: If the extension provides cashback/points, clearly disclose if that reward is funded by a commission that might otherwise have gone to a content creator
 - ❌ **No Hidden Tabs**: Never open background or hidden tabs to refresh affiliate cookies without the user's explicit knowledge and consent
@@ -272,6 +283,7 @@ Developers using this framework should adhere to the following ethical guideline
 ### 2. Merchant & Small Business Integrity
 
 **Respect Private Codes**
+
 - ❌ Don't scrape or share discount codes clearly intended for specific audiences (e.g., one-time welcome codes, employee-only codes, influencer-specific codes)
 - ✅ Provide a clear opt-out path for merchants to request their store be excluded from your database
 - ❌ **No Extortion**: Don't gate "code control" behind paid partnerships. If a merchant reports an invalid code, remove it regardless of their affiliate status
@@ -279,6 +291,7 @@ Developers using this framework should adhere to the following ethical guideline
 ### 3. Data Privacy & Transparency
 
 **Zero-Knowledge by Default**
+
 - ✅ Only collect data necessary to find coupons
 - ❌ Don't track cross-site browsing history or purchase habits to sell to third-party ad networks
 - ✅ **Explicit Consent**: Ask permission before activating "Rewards" or "Cashback" features that track purchases
@@ -287,12 +300,14 @@ Developers using this framework should adhere to the following ethical guideline
 ### 4. Protection of Minors
 
 **Age-Appropriate Practices**
+
 - ❌ Don't market the extension to minors or encourage children to install tracking software
 - ✅ Ensure COPPA compliance—don't collect data from users under 13
 
 ### 5. The "Best Deal" Promise
 
 **Honest Sorting**
+
 - ✅ If you claim to find the "best deal," prioritize codes that provide the highest discount to the user
 - ❌ Don't prioritize codes that pay higher commissions over better user discounts
 - ✅ **Disclosure of Partnerships**: Clearly label "Partner" or "Sponsored" codes if promoted over others
@@ -368,12 +383,14 @@ npx prisma migrate dev   # Run migrations
 ### Environment Configuration
 
 **Client** (`client/.env`):
+
 ```bash
 VITE_API_BASE_URL=http://localhost:3030/api/v1
 VITE_ENV=development
 ```
 
 **Server** (`server/.env`):
+
 ```bash
 DATABASE_URL="postgresql://user:password@localhost:5432/opencoupon?schema=public"
 PORT=3030
@@ -401,6 +418,7 @@ npm run test:coverage    # Generate coverage report
 ```
 
 **Current Test Coverage:**
+
 - ✅ 58/58 Backend tests passing
 - ✅ API endpoint integration tests
 - ✅ Service layer unit tests
@@ -416,6 +434,7 @@ Contributions are welcome! Whether you're fixing bugs, adding features, or impro
 ### How to Contribute
 
 1. **Fork the repository**
+
    ```bash
    # Click "Fork" on GitHub, then clone your fork
    git clone https://github.com/YOUR_USERNAME/open-coupon.git
@@ -423,6 +442,7 @@ Contributions are welcome! Whether you're fixing bugs, adding features, or impro
    ```
 
 2. **Create a feature branch**
+
    ```bash
    git checkout -b feature/amazing-feature
    ```
@@ -435,11 +455,13 @@ Contributions are welcome! Whether you're fixing bugs, adding features, or impro
    - Run `npm test` to ensure tests pass
 
 4. **Commit your changes**
+
    ```bash
    git commit -m "Add amazing feature"
    ```
 
 5. **Push to your fork**
+
    ```bash
    git push origin feature/amazing-feature
    ```
@@ -467,11 +489,13 @@ See [Quick Start](#-quick-start) for detailed setup instructions.
 ### Areas for Contribution
 
 🌟 **High Priority:**
+
 - UI/UX improvements
 - Mobile browser support
 - Firefox extension port
 
 💡 **Feature Ideas:**
+
 - Multi-language support
 - Coupon expiry tracking
 - Browser sync across devices
@@ -479,6 +503,7 @@ See [Quick Start](#-quick-start) for detailed setup instructions.
 - Coupon and Retailer Management platform
 
 📝 **Documentation:**
+
 - Architecture diagrams
 - API documentation
 - Deployment guides

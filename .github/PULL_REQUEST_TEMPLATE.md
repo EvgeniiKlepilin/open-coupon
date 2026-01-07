@@ -1,7 +1,9 @@
 ## Description
+
 <!-- Provide a clear and concise description of what this PR does -->
 
 ## Type of Change
+
 <!-- Mark the relevant option with an "x" -->
 
 - [ ] Bug fix (non-breaking change which fixes an issue)
@@ -14,6 +16,7 @@
 - [ ] Dependency update
 
 ## Scope
+
 <!-- Mark all that apply -->
 
 - [ ] Client (Chrome Extension)
@@ -23,6 +26,7 @@
 - [ ] Documentation
 
 ## Changes Made
+
 <!-- List the specific changes in bullet points -->
 
 -
@@ -30,11 +34,13 @@
 -
 
 ## Related Issues
+
 <!-- Link related issues using: Fixes #123, Closes #456, Relates to #789 -->
 
 Fixes #
 
 ## Testing Checklist
+
 <!-- Mark completed items with an "x" -->
 
 - [ ] All existing tests pass (`npm run test`)
@@ -45,13 +51,16 @@ Fixes #
 - [ ] Integration tests pass (if server changes)
 
 ### Test Coverage
+
 <!-- For server changes, ensure coverage meets thresholds -->
+
 - [ ] Branches: 75%+
 - [ ] Functions: 100%
 - [ ] Lines: 90%+
 - [ ] Statements: 90%+
 
 ## Code Quality Checklist
+
 <!-- Mark completed items with an "x" -->
 
 - [ ] Code follows project coding standards (CLAUDE.md)
@@ -65,6 +74,7 @@ Fixes #
 - [ ] Code is self-documenting (comments only where logic isn't self-evident)
 
 ## Extension-Specific Checklist
+
 <!-- Only for client changes -->
 
 - [ ] Manifest V3 compliance maintained
@@ -75,6 +85,7 @@ Fixes #
 - [ ] Content script tested on real websites
 
 ## API Changes
+
 <!-- Only if API endpoints were modified -->
 
 - [ ] API documentation updated
@@ -83,6 +94,7 @@ Fixes #
 - [ ] Backward compatibility maintained (or breaking change documented)
 
 ## Database Changes
+
 <!-- Only if schema was modified -->
 
 - [ ] Migration file created and tested
@@ -91,23 +103,29 @@ Fixes #
 - [ ] Rollback plan documented
 
 ## Screenshots
+
 <!-- For UI changes, add before/after screenshots -->
 
 ### Before
+
 <!-- Screenshot or N/A -->
 
 ### After
+
 <!-- Screenshot or N/A -->
 
 ## Additional Notes
+
 <!-- Any additional information reviewers should know -->
 
 ## Deployment Notes
+
 <!-- Special instructions for deployment, if any -->
 
 ---
 
 **Checklist before requesting review:**
+
 - [ ] Self-review completed
 - [ ] Code is rebased on latest main branch
 - [ ] Commit messages are clear and descriptive

@@ -86,7 +86,7 @@ describe('Feedback API Integration Tests', () => {
         .send({
           success: true,
           metadata: {
-            discountAmount: 25.50,
+            discountAmount: 25.5,
             discountPercentage: 20,
             domain: 'feedbacktest.com',
             testDurationMs: 2500,
@@ -163,7 +163,6 @@ describe('Feedback API Integration Tests', () => {
       expect(response.body.error).toContain('Invalid coupon ID');
     });
 
-
     it('should update lastSuccessAt only on success', async () => {
       // Get initial state
       const initialCoupon = await db.coupon.findUnique({
@@ -173,10 +172,7 @@ describe('Feedback API Integration Tests', () => {
       const initialLastSuccessAt = initialCoupon?.lastSuccessAt;
 
       // Submit success feedback
-      await request(app)
-        .post(`/api/v1/coupons/${testCouponId2}/feedback`)
-        .send({ success: true })
-        .expect(200);
+      await request(app).post(`/api/v1/coupons/${testCouponId2}/feedback`).send({ success: true }).expect(200);
 
       // Verify lastSuccessAt was updated
       const updatedCoupon = await db.coupon.findUnique({
@@ -255,6 +251,5 @@ describe('Feedback API Integration Tests', () => {
       expect(response.body.results[1].success).toBe(false);
       expect(response.body.results[1].error).toContain('not found');
     });
-
   });
 });

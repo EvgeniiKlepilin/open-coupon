@@ -51,6 +51,7 @@ The detector tries multiple approaches in priority order:
 ### Confidence Scoring
 
 Each detection includes a confidence score (0-100):
+
 - 100: Retailer-specific selector match
 - 80-90: Attribute match (90 for multiple keywords)
 - 60: Label-based match
@@ -60,6 +61,7 @@ Each detection includes a confidence score (0-100):
 ### Validation & Filtering
 
 Elements must pass validation to be considered:
+
 - ✅ Visible (not `display: none`, `visibility: hidden`, `opacity: 0`)
 - ✅ Not disabled
 - ✅ Keyboard accessible (`tabindex !== "-1"`)
@@ -78,35 +80,38 @@ Elements must pass validation to be considered:
 Main detection function that tries all strategies.
 
 **Options:**
+
 ```typescript
 interface DetectorOptions {
-  selectorConfig?: SelectorConfig;  // Retailer-specific selectors
-  keywords?: string[];               // Custom keywords (default: DEFAULT_KEYWORDS)
-  retryAttempts?: number;            // Retry attempts (default: 3)
-  retryDelay?: number;               // Delay between retries in ms (default: 1000)
+  selectorConfig?: SelectorConfig; // Retailer-specific selectors
+  keywords?: string[]; // Custom keywords (default: DEFAULT_KEYWORDS)
+  retryAttempts?: number; // Retry attempts (default: 3)
+  retryDelay?: number; // Delay between retries in ms (default: 1000)
 }
 ```
 
 **Returns:**
+
 ```typescript
 interface DetectionResult {
   inputElement: HTMLInputElement | null;
   submitElement: HTMLElement | null;
-  confidence: number;                // 0-100
+  confidence: number; // 0-100
   detectionMethod: 'retailer-specific' | 'attribute' | 'label' | 'heuristic';
-  containerElement?: HTMLElement;    // Parent form or container
+  containerElement?: HTMLElement; // Parent form or container
 }
 ```
 
 **Example:**
+
 ```typescript
 const result = await findCouponElements({
   selectorConfig: {
     input: '#discount-code',
-    submit: '#apply-discount'
+    submit: '#apply-discount',
   },
   retryAttempts: 5,
-  retryDelay: 500
+  retryDelay: 500,
 });
 
 if (result.confidence >= 60) {
@@ -120,11 +125,12 @@ if (result.confidence >= 60) {
 Find elements using retailer-specific CSS selectors.
 
 **Example:**
+
 ```typescript
 const result = findByRetailerConfig({
   input: '#promo-code',
   submit: 'button[data-testid="apply-promo"]',
-  container: '.checkout-sidebar'
+  container: '.checkout-sidebar',
 });
 ```
 
@@ -133,6 +139,7 @@ const result = findByRetailerConfig({
 Find elements by searching attributes for keywords.
 
 **Example:**
+
 ```typescript
 const result = findByAttributes(['coupon', 'promo', 'discount']);
 ```
@@ -142,6 +149,7 @@ const result = findByAttributes(['coupon', 'promo', 'discount']);
 Find elements by searching label text for keywords.
 
 **Example:**
+
 ```typescript
 const result = findByLabel(['gift card', 'voucher']);
 ```
@@ -151,6 +159,7 @@ const result = findByLabel(['gift card', 'voucher']);
 Find the submit button associated with an input element.
 
 Searches for:
+
 - `<button type="submit">` in same form
 - Buttons with text: "apply", "submit", "use"
 - `<input type="submit">` in same form
@@ -165,6 +174,7 @@ Calculate confidence score for a detected element.
 Wait for an element to appear in the DOM using MutationObserver.
 
 **Example:**
+
 ```typescript
 const element = await waitForElement('#dynamic-promo', 5000);
 if (element) {
@@ -198,11 +208,11 @@ if (result.inputElement) {
 // Get retailer config from API
 const retailerConfig = {
   input: '#coupon-input',
-  submit: 'button.apply-coupon'
+  submit: 'button.apply-coupon',
 };
 
 const result = await findCouponElements({
-  selectorConfig: retailerConfig
+  selectorConfig: retailerConfig,
 });
 
 console.log('Detection method:', result.detectionMethod); // 'retailer-specific'
@@ -214,7 +224,7 @@ console.log('Confidence:', result.confidence); // 100
 ```typescript
 // Detect gift card field
 const result = await findCouponElements({
-  keywords: ['gift', 'card', 'certificate']
+  keywords: ['gift', 'card', 'certificate'],
 });
 ```
 
@@ -224,7 +234,7 @@ const result = await findCouponElements({
 // For SPAs with lazy-loaded checkout sections
 const result = await findCouponElements({
   retryAttempts: 5,
-  retryDelay: 2000 // 2 seconds between retries
+  retryDelay: 2000, // 2 seconds between retries
 });
 
 if (result.confidence > 0) {
@@ -271,6 +281,7 @@ See `src/test/fixtures/README.md` for details on using these test pages.
 - ✅ Safari (with polyfills)
 
 Requires:
+
 - `MutationObserver` API (all modern browsers)
 - `querySelectorAll` (all modern browsers)
 - `getComputedStyle` (all modern browsers)

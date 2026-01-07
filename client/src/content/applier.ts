@@ -14,12 +14,7 @@
  * - Never log sensitive user data (full prices, addresses, payment info)
  */
 
-import type {
-  PriceInfo,
-  CouponTestResult,
-  ApplierResult,
-  ApplierOptions,
-} from '../types';
+import type { PriceInfo, CouponTestResult, ApplierResult, ApplierOptions } from '../types';
 
 // Default configuration constants
 const DEFAULT_DELAY_MIN = 2000; // 2 seconds minimum
@@ -86,13 +81,9 @@ export function normalizePrice(priceText: string): number {
   const lastDot = cleaned.lastIndexOf('.');
   const lastComma = cleaned.lastIndexOf(',');
 
-  if (lastDot > lastComma) {
-    // Period is decimal separator (US format: 1,234.56)
-    cleaned = cleaned.replace(/,/g, ''); // Remove thousand separators
-  } else if (lastComma > lastDot) {
-    // Comma is decimal separator (EU format: 1.234,56)
-    cleaned = cleaned.replace(/\./g, ''); // Remove thousand separators
-    cleaned = cleaned.replace(/,/, '.'); // Convert decimal separator to period
+  if (lastDot === -1 && lastComma === -1) {
+    // No separators, just a number
+    // Do nothing
   } else if (lastDot === -1 && lastComma !== -1) {
     // Only comma present (could be decimal or thousand separator)
     // If there are 2 digits after comma, it's a decimal separator
@@ -113,6 +104,13 @@ export function normalizePrice(priceText: string): number {
       cleaned = cleaned.replace(/\./g, '');
     }
     // Otherwise it's already a decimal separator
+  } else if (lastDot > lastComma) {
+    // Both present, period is decimal separator (US format: 1,234.56)
+    cleaned = cleaned.replace(/,/g, ''); // Remove thousand separators
+  } else if (lastComma > lastDot) {
+    // Both present, comma is decimal separator (EU format: 1.234,56)
+    cleaned = cleaned.replace(/\./g, ''); // Remove thousand separators
+    cleaned = cleaned.replace(/,/, '.'); // Convert decimal separator to period
   }
 
   // Parse to float
@@ -190,9 +188,9 @@ export async function detectPrice(selectors?: string[]): Promise<PriceInfo | nul
   const bodyText = document.body?.innerText || document.body?.textContent || '';
   if (bodyText) {
     const currencyPatterns = [
-      /\$\s*[\d,]+\.?\d{0,2}/g,  // $1,234.56
-      /€\s*[\d.,]+/g,             // €1.234,56
-      /£\s*[\d,]+\.?\d{0,2}/g,   // £1,234.56
+      /\$\s*[\d,]+\.?\d{0,2}/g, // $1,234.56
+      /€\s*[\d.,]+/g, // €1.234,56
+      /£\s*[\d,]+\.?\d{0,2}/g, // £1,234.56
       /[\d,]+\.?\d{0,2}\s*USD/gi, // 1,234.56 USD
     ];
 
@@ -200,7 +198,7 @@ export async function detectPrice(selectors?: string[]): Promise<PriceInfo | nul
       const matches = bodyText.match(pattern);
       if (matches && matches.length > 0) {
         // Take the largest value (likely the total)
-        const prices = matches.map(m => normalizePrice(m));
+        const prices = matches.map((m) => normalizePrice(m));
         const maxPrice = Math.max(...prices);
         const matchText = matches[prices.indexOf(maxPrice)];
 
@@ -229,7 +227,7 @@ export async function detectPrice(selectors?: string[]): Promise<PriceInfo | nul
 export function simulateHumanDelay(min: number, max: number): Promise<void> {
   const delay = Math.floor(Math.random() * (max - min + 1)) + min;
   console.debug(`Waiting ${delay}ms before next action...`);
-  return new Promise(resolve => setTimeout(resolve, delay));
+  return new Promise((resolve) => setTimeout(resolve, delay));
 }
 
 /**
@@ -244,11 +242,7 @@ export function simulateHumanDelay(min: number, max: number): Promise<void> {
  * @param input - Input element for coupon code
  * @param submit - Submit button element
  */
-export async function applySingleCoupon(
-  code: string,
-  input: HTMLInputElement,
-  submit: HTMLElement
-): Promise<void> {
+export async function applySingleCoupon(code: string, input: HTMLInputElement, submit: HTMLElement): Promise<void> {
   try {
     // Clear existing value
     input.value = '';
@@ -323,7 +317,7 @@ function waitForButtonEnable(button: HTMLButtonElement | HTMLInputElement, timeo
  */
 export async function waitForPriceChange(
   basePrice: PriceInfo,
-  timeout: number = DEFAULT_TIMEOUT
+  timeout: number = DEFAULT_TIMEOUT,
 ): Promise<PriceInfo | null> {
   return new Promise((resolve) => {
     const startTime = Date.now();
@@ -340,9 +334,10 @@ export async function waitForPriceChange(
     };
 
     // Find container to observe - limit scope to relevant sections
-    const container = basePrice.element?.closest('[class*="checkout"], [class*="cart"], form')
-      || document.querySelector('main, [role="main"], .checkout, .cart')
-      || document.body;
+    const container =
+      basePrice.element?.closest('[class*="checkout"], [class*="cart"], form') ||
+      document.querySelector('main, [role="main"], .checkout, .cart') ||
+      document.body;
 
     const checkPrice = async (): Promise<void> => {
       // Exit early if observer was cleaned up
@@ -479,7 +474,7 @@ export function detectSuccessIndicators(): { success: boolean; message?: string 
 export async function reapplyBestCoupon(
   couponCode: string,
   input: HTMLInputElement,
-  submit: HTMLElement
+  submit: HTMLElement,
 ): Promise<void> {
   console.debug(`Re-applying best coupon: ${couponCode}`);
   await applySingleCoupon(couponCode, input, submit);
@@ -601,7 +596,9 @@ export async function autoApplyCoupons(options: ApplierOptions): Promise<Applier
         result.successful++;
         consecutiveFailures = 0;
 
-        console.debug(`✅ SUCCESS: Saved ${newPrice.currency}${discountAmount.toFixed(2)} (${discountPercentage.toFixed(1)}%)`);
+        console.debug(
+          `✅ SUCCESS: Saved ${newPrice.currency}${discountAmount.toFixed(2)} (${discountPercentage.toFixed(1)}%)`,
+        );
       } else if (indicators.success && (!newPrice || newPrice.value >= baselinePrice.value)) {
         // Success message detected but NO price change - this is misleading, mark as FAILURE
         // Some sites show "success" messages even for invalid coupons
@@ -693,7 +690,7 @@ export async function autoApplyCoupons(options: ApplierOptions): Promise<Applier
       if (i < couponsToTest.length - 1) {
         await simulateHumanDelay(
           delayBetweenAttempts || DEFAULT_DELAY_MIN,
-          delayBetweenAttempts ? delayBetweenAttempts + 2000 : DEFAULT_DELAY_MAX
+          delayBetweenAttempts ? delayBetweenAttempts + 2000 : DEFAULT_DELAY_MAX,
         );
       }
     }
@@ -712,7 +709,6 @@ export async function autoApplyCoupons(options: ApplierOptions): Promise<Applier
 
     onComplete?.(result);
     return result;
-
   } catch (error) {
     result.errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     console.error('Auto-apply failed:', error);

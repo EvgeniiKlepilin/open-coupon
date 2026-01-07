@@ -17,7 +17,8 @@ jest.unstable_mockModule('../../lib/db.js', () => ({
 }));
 
 // Import after mocking
-const { recordCouponFeedback, recordBatchCouponFeedback, calculateSuccessRate } = await import('../../services/feedback.service.js');
+const { recordCouponFeedback, recordBatchCouponFeedback, calculateSuccessRate } =
+  await import('../../services/feedback.service.js');
 const { NotFoundError, BadRequestError } = await import('../../lib/errors.js');
 const { db } = await import('../../lib/db.js');
 
@@ -99,13 +100,11 @@ describe('Feedback Service', () => {
     it('should throw NotFoundError when coupon does not exist', async () => {
       mockDb.coupon.findUnique.mockResolvedValue(null);
 
-      await expect(recordCouponFeedback('123e4567-e89b-12d3-a456-426614174000', true))
-        .rejects.toThrow(NotFoundError);
+      await expect(recordCouponFeedback('123e4567-e89b-12d3-a456-426614174000', true)).rejects.toThrow(NotFoundError);
     });
 
     it('should throw BadRequestError when coupon ID is invalid', async () => {
-      await expect(recordCouponFeedback('invalid-uuid', true))
-        .rejects.toThrow(BadRequestError);
+      await expect(recordCouponFeedback('invalid-uuid', true)).rejects.toThrow(BadRequestError);
 
       expect(mockDb.coupon.findUnique).not.toHaveBeenCalled();
     });
@@ -115,7 +114,7 @@ describe('Feedback Service', () => {
       mockDb.coupon.update.mockResolvedValue(mockCoupon);
 
       const metadata = {
-        discountAmount: 25.50,
+        discountAmount: 25.5,
         discountPercentage: 20,
         domain: 'nike.com',
         testDurationMs: 2500,
@@ -123,8 +122,7 @@ describe('Feedback Service', () => {
         testedAt: new Date().toISOString(),
       };
 
-      await expect(recordCouponFeedback(mockCoupon.id, true, metadata))
-        .resolves.toBeDefined();
+      await expect(recordCouponFeedback(mockCoupon.id, true, metadata)).resolves.toBeDefined();
     });
   });
 
@@ -160,12 +158,8 @@ describe('Feedback Service', () => {
     };
 
     it('should process all feedback items successfully', async () => {
-      mockDb.coupon.findUnique
-        .mockResolvedValueOnce(mockCoupon1)
-        .mockResolvedValueOnce(mockCoupon2);
-      mockDb.coupon.update
-        .mockResolvedValueOnce(mockCoupon1)
-        .mockResolvedValueOnce(mockCoupon2);
+      mockDb.coupon.findUnique.mockResolvedValueOnce(mockCoupon1).mockResolvedValueOnce(mockCoupon2);
+      mockDb.coupon.update.mockResolvedValueOnce(mockCoupon1).mockResolvedValueOnce(mockCoupon2);
 
       const feedbackItems = [
         { couponId: mockCoupon1.id, success: true },
@@ -182,9 +176,7 @@ describe('Feedback Service', () => {
     });
 
     it('should handle partial failures gracefully', async () => {
-      mockDb.coupon.findUnique
-        .mockResolvedValueOnce(mockCoupon1)
-        .mockResolvedValueOnce(null); // Second coupon not found
+      mockDb.coupon.findUnique.mockResolvedValueOnce(mockCoupon1).mockResolvedValueOnce(null); // Second coupon not found
       mockDb.coupon.update.mockResolvedValueOnce(mockCoupon1);
 
       const feedbackItems = [

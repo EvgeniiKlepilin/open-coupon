@@ -24,7 +24,7 @@ const FEEDBACK_TIMEOUT_MS = 10000; // 10 seconds
  */
 export async function sendFeedback(
   couponId: string,
-  feedback: FeedbackRequest
+  feedback: FeedbackRequest,
 ): Promise<FeedbackResponse | FeedbackError> {
   // Rate limiting
   try {
@@ -84,7 +84,7 @@ export async function sendFeedback(
  * @returns Batch response with results for each item
  */
 export async function sendBatchFeedback(
-  feedbackItems: BatchFeedbackRequest['feedback']
+  feedbackItems: BatchFeedbackRequest['feedback'],
 ): Promise<BatchFeedbackResponse | FeedbackError> {
   // Rate limiting
   try {
@@ -144,10 +144,7 @@ export async function sendBatchFeedback(
  * @param domain - Current retailer domain
  * @returns Formatted feedback request
  */
-export function testResultToFeedback(
-  testResult: CouponTestResult,
-  domain: string
-): FeedbackRequest {
+export function testResultToFeedback(testResult: CouponTestResult, domain: string): FeedbackRequest {
   const metadata = {
     domain,
     testDurationMs: testResult.durationMs,

@@ -122,7 +122,7 @@ export async function submitBatchCouponFeedback(req: Request, res: Response, nex
     const { feedback } = validatedData;
 
     // Record batch feedback in database
-    const result = await recordBatchCouponFeedback(feedback.map(f => ({ ...f, metadata: f.metadata! })));
+    const result = await recordBatchCouponFeedback(feedback.map((f) => ({ ...f, metadata: f.metadata! })));
 
     // Return successful response
     res.status(200).json({

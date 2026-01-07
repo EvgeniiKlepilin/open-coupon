@@ -1,7 +1,4 @@
-/**
- * @jest-environment jsdom
- */
-
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   normalizePrice,
   detectPrice,
@@ -110,7 +107,7 @@ describe('applier - Price Detection', () => {
 
       const price = await detectPrice(['.custom-total']);
       expect(price).not.toBeNull();
-      expect(price?.value).toBe(500.00);
+      expect(price?.value).toBe(500.0);
     });
 
     it('should skip hidden elements', async () => {
@@ -183,12 +180,12 @@ describe('applier - Price Detection', () => {
 describe('applier - Coupon Application', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
-    jest.clearAllTimers();
-    jest.useFakeTimers();
+    vi.clearAllTimers();
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   describe('applySingleCoupon', () => {
@@ -197,9 +194,9 @@ describe('applier - Coupon Application', () => {
       input.type = 'text';
       const button = document.createElement('button');
 
-      const inputListener = jest.fn();
-      const changeListener = jest.fn();
-      const keyupListener = jest.fn();
+      const inputListener = vi.fn();
+      const changeListener = vi.fn();
+      const keyupListener = vi.fn();
 
       input.addEventListener('input', inputListener);
       input.addEventListener('change', changeListener);
@@ -208,7 +205,7 @@ describe('applier - Coupon Application', () => {
       const applyPromise = applySingleCoupon('SAVE20', input, button);
 
       // Fast-forward all timers
-      jest.runAllTimers();
+      await vi.runAllTimersAsync();
       await applyPromise;
 
       expect(input.value).toBe('SAVE20');
@@ -221,11 +218,11 @@ describe('applier - Coupon Application', () => {
       const input = document.createElement('input');
       const button = document.createElement('button');
 
-      const clickListener = jest.fn();
+      const clickListener = vi.fn();
       button.addEventListener('click', clickListener);
 
       const applyPromise = applySingleCoupon('SAVE20', input, button);
-      jest.runAllTimers();
+      await vi.runAllTimersAsync();
       await applyPromise;
 
       expect(clickListener).toHaveBeenCalled();
@@ -245,7 +242,7 @@ describe('applier - Coupon Application', () => {
         button.disabled = false;
       }, 500);
 
-      jest.runAllTimers();
+      await vi.runAllTimersAsync();
       await applyPromise;
 
       expect(button.disabled).toBe(false);
@@ -257,9 +254,9 @@ describe('applier - Coupon Application', () => {
     it('should delay within specified range', async () => {
       const delayPromise = simulateHumanDelay(1000, 2000);
 
-      expect(jest.getTimerCount()).toBeGreaterThan(0);
+      expect(vi.getTimerCount()).toBeGreaterThan(0);
 
-      jest.runAllTimers();
+      await vi.runAllTimersAsync();
       await delayPromise;
     });
   });
@@ -343,11 +340,11 @@ describe('applier - Success/Failure Detection', () => {
 describe('applier - Price Change Detection', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
-    jest.useFakeTimers();
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   describe('waitForPriceChange', () => {
@@ -374,7 +371,7 @@ describe('applier - Price Change Detection', () => {
         }
       }, 1000);
 
-      jest.runAllTimers();
+      await vi.runAllTimersAsync();
       const newPrice = await waitPromise;
 
       // Note: In real implementation, MutationObserver would detect this
@@ -397,7 +394,7 @@ describe('applier - Price Change Detection', () => {
 
       const waitPromise = waitForPriceChange(basePrice, 1000);
 
-      jest.runAllTimers();
+      await vi.runAllTimersAsync();
       const newPrice = await waitPromise;
 
       expect(newPrice).toBeNull();
@@ -408,11 +405,11 @@ describe('applier - Price Change Detection', () => {
 describe('applier - Auto-Apply Integration', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
-    jest.useFakeTimers();
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   describe('autoApplyCoupons', () => {
@@ -445,7 +442,7 @@ describe('applier - Auto-Apply Integration', () => {
       };
 
       const applyPromise = autoApplyCoupons(options);
-      jest.runAllTimers();
+      await vi.runAllTimersAsync();
       const result = await applyPromise;
 
       expect(result.errorMessage).toBe('Failed to detect price on page');
@@ -475,9 +472,9 @@ describe('applier - Auto-Apply Integration', () => {
         },
       ];
 
-      const onProgress = jest.fn();
-      const onCouponTested = jest.fn();
-      const onComplete = jest.fn();
+      const onProgress = vi.fn();
+      const onCouponTested = vi.fn();
+      const onComplete = vi.fn();
 
       const options: ApplierOptions = {
         coupons,
@@ -489,7 +486,7 @@ describe('applier - Auto-Apply Integration', () => {
       };
 
       const applyPromise = autoApplyCoupons(options);
-      jest.runAllTimers();
+      await vi.runAllTimersAsync();
       const result = await applyPromise;
 
       expect(result.tested).toBe(1);
@@ -531,7 +528,7 @@ describe('applier - Auto-Apply Integration', () => {
         },
       ];
 
-      const onProgress = jest.fn();
+      const onProgress = vi.fn();
 
       const options: ApplierOptions = {
         coupons,
@@ -541,7 +538,7 @@ describe('applier - Auto-Apply Integration', () => {
       };
 
       const applyPromise = autoApplyCoupons(options);
-      jest.runAllTimers();
+      await vi.runAllTimersAsync();
       await applyPromise;
 
       // HIGH should be tested first (higher success count)
@@ -578,7 +575,7 @@ describe('applier - Auto-Apply Integration', () => {
       };
 
       const applyPromise = autoApplyCoupons(options);
-      jest.runAllTimers();
+      await vi.runAllTimersAsync();
       const result = await applyPromise;
 
       expect(result.tested).toBe(5);

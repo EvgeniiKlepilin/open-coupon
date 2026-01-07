@@ -22,7 +22,7 @@ async function main(): Promise<void> {
 
   // Create Nike retailer with coupons
   console.log('🏪 Creating Nike retailer...');
-  const nike = await prisma.retailer.create({
+  await prisma.retailer.create({
     data: {
       domain: 'nike.com',
       name: 'Nike',
@@ -68,7 +68,7 @@ async function main(): Promise<void> {
 
   // Create Amazon retailer with coupons
   console.log('🏪 Creating Amazon retailer...');
-  const amazon = await prisma.retailer.create({
+  await prisma.retailer.create({
     data: {
       domain: 'amazon.com',
       name: 'Amazon',

@@ -2,15 +2,7 @@ import type { DetectionResult, SelectorConfig, DetectorOptions } from '../types'
 import { isValidDOMElement } from '@/utils/security';
 
 // Default configuration
-const DEFAULT_KEYWORDS = [
-  'coupon',
-  'promo',
-  'promotional',
-  'discount',
-  'voucher',
-  'code',
-  'gift',
-];
+const DEFAULT_KEYWORDS = ['coupon', 'promo', 'promotional', 'discount', 'voucher', 'code', 'gift'];
 
 const DEFAULT_OPTIONS: Required<DetectorOptions> = {
   selectorConfig: {},
@@ -72,9 +64,7 @@ async function setCachedResult(data: DetectionResult): Promise<void> {
  * @param options - Configuration options for detection
  * @returns Promise resolving to detection result
  */
-export async function findCouponElements(
-  options?: DetectorOptions
-): Promise<DetectionResult> {
+export async function findCouponElements(options?: DetectorOptions): Promise<DetectionResult> {
   const opts = { ...DEFAULT_OPTIONS, ...options };
 
   // Check cache first (using chrome.storage.session to avoid race conditions)
@@ -148,14 +138,10 @@ export async function findCouponElements(
  * @param config - Retailer selector configuration
  * @returns Detection result or null
  */
-export function findByRetailerConfig(
-  config: SelectorConfig
-): DetectionResult | null {
+export function findByRetailerConfig(config: SelectorConfig): DetectionResult | null {
   try {
     // Security: Validate selector and element before interaction
-    const inputElement = config.input
-      ? document.querySelector(config.input)
-      : null;
+    const inputElement = config.input ? document.querySelector(config.input) : null;
 
     // Security: Validate element is safe to interact with
     if (!inputElement || !isValidDOMElement(inputElement) || !isElementValid(inputElement)) {
@@ -167,18 +153,14 @@ export function findByRetailerConfig(
       return null;
     }
 
-    const submitElement = config.submit
-      ? document.querySelector(config.submit)
-      : findSubmitButton(inputElement);
+    const submitElement = config.submit ? document.querySelector(config.submit) : findSubmitButton(inputElement);
 
     // Security: Validate submit element
     if (submitElement && !isValidDOMElement(submitElement)) {
       return null;
     }
 
-    const containerElement = config.container
-      ? document.querySelector(config.container)
-      : inputElement.closest('form');
+    const containerElement = config.container ? document.querySelector(config.container) : inputElement.closest('form');
 
     // Security: Validate container element
     if (containerElement && !isValidDOMElement(containerElement)) {
@@ -209,9 +191,7 @@ export function findByRetailerConfig(
 export function findByAttributes(keywords: string[]): DetectionResult | null {
   try {
     const inputs = Array.from(
-      document.querySelectorAll<HTMLInputElement>(
-        'input[type="text"], input[type="search"], input:not([type])'
-      )
+      document.querySelectorAll<HTMLInputElement>('input[type="text"], input[type="search"], input:not([type])'),
     );
 
     let bestMatch: {
@@ -254,8 +234,7 @@ export function findByAttributes(keywords: string[]): DetectionResult | null {
     if (!bestMatch) return null;
 
     const submitElement = findSubmitButton(bestMatch.element);
-    const containerElement =
-      (bestMatch.element.closest('form') as HTMLElement) || undefined;
+    const containerElement = (bestMatch.element.closest('form') as HTMLElement) || undefined;
 
     return {
       inputElement: bestMatch.element,
@@ -281,9 +260,7 @@ export function findByLabel(keywords: string[]): DetectionResult | null {
 
     for (const label of labels) {
       const labelText = label.textContent?.toLowerCase() || '';
-      const hasKeyword = keywords.some((keyword) =>
-        labelText.includes(keyword.toLowerCase())
-      );
+      const hasKeyword = keywords.some((keyword) => labelText.includes(keyword.toLowerCase()));
 
       if (!hasKeyword) continue;
 
@@ -301,7 +278,7 @@ export function findByLabel(keywords: string[]): DetectionResult | null {
       // If not found, try to find input within the label
       if (!inputElement) {
         const element = label.querySelector<HTMLInputElement>(
-          'input[type="text"], input[type="search"], input:not([type])'
+          'input[type="text"], input[type="search"], input:not([type])',
         );
         // Security: Validate element before using
         if (element && isValidDOMElement(element)) {
@@ -319,8 +296,7 @@ export function findByLabel(keywords: string[]): DetectionResult | null {
 
       if (inputElement && isElementValid(inputElement)) {
         const submitElement = findSubmitButton(inputElement);
-        const containerElement =
-          (inputElement.closest('form') as HTMLElement) || undefined;
+        const containerElement = (inputElement.closest('form') as HTMLElement) || undefined;
 
         return {
           inputElement,
@@ -344,16 +320,12 @@ export function findByLabel(keywords: string[]): DetectionResult | null {
  * @param inputElement - The input element to find the submit button for
  * @returns The submit button element or null
  */
-export function findSubmitButton(
-  inputElement: HTMLInputElement
-): HTMLElement | null {
+export function findSubmitButton(inputElement: HTMLInputElement): HTMLElement | null {
   try {
     // First try to find button in same form
     const form = inputElement.closest('form');
     if (form) {
-      const submitButton = form.querySelector<HTMLElement>(
-        'button[type="submit"], input[type="submit"]'
-      );
+      const submitButton = form.querySelector<HTMLElement>('button[type="submit"], input[type="submit"]');
       if (submitButton && isElementVisible(submitButton)) {
         return submitButton;
       }
@@ -362,11 +334,7 @@ export function findSubmitButton(
       const buttons = Array.from(form.querySelectorAll<HTMLElement>('button'));
       for (const button of buttons) {
         const buttonText = button.textContent?.toLowerCase() || '';
-        if (
-          buttonText.includes('apply') ||
-          buttonText.includes('submit') ||
-          buttonText.includes('use')
-        ) {
+        if (buttonText.includes('apply') || buttonText.includes('submit') || buttonText.includes('use')) {
           if (isElementVisible(button)) {
             return button;
           }
@@ -377,9 +345,7 @@ export function findSubmitButton(
     // If no form, look for nearby buttons
     const parent = inputElement.parentElement;
     if (parent) {
-      const nearbyButton = parent.querySelector<HTMLElement>(
-        'button, input[type="submit"]'
-      );
+      const nearbyButton = parent.querySelector<HTMLElement>('button, input[type="submit"]');
       if (nearbyButton && isElementVisible(nearbyButton)) {
         return nearbyButton;
       }
@@ -400,7 +366,7 @@ export function findSubmitButton(
  */
 export function calculateConfidence(
   element: HTMLElement,
-  method: 'retailer-specific' | 'attribute' | 'label' | 'heuristic'
+  method: 'retailer-specific' | 'attribute' | 'label' | 'heuristic',
 ): number {
   if (!isElementValid(element)) return 0;
 
@@ -424,10 +390,7 @@ export function calculateConfidence(
  * @param timeout - Maximum time to wait in milliseconds
  * @returns Promise resolving to the element or null
  */
-export function waitForElement(
-  selector: string,
-  timeout: number = 10000
-): Promise<HTMLElement | null> {
+export function waitForElement(selector: string, timeout: number = 10000): Promise<HTMLElement | null> {
   return new Promise((resolve) => {
     const element = document.querySelector<HTMLElement>(selector);
     if (element) {

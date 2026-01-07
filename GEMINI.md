@@ -1,15 +1,18 @@
 # CLAUDE.md - Project Context & Rules for AI Agents
 
 ## 1. Project Overview
+
 **Name:** OpenCoupon
 **Description:** An open-source, full-stack browser extension framework (Honey clone) that automatically applies coupon codes at checkout.
 **Architecture:** Monorepo with separate client and server packages.
+
 - `client/`: React + Vite (Chrome Extension Manifest V3)
 - `server/`: Node.js + Express (REST API)
 
 ## 2. Tech Stack & Versions
 
 ### Frontend (Client)
+
 - **React:** 19.1.0
 - **TypeScript:** 5.9.3 (hoisted from root)
 - **Vite:** 7.0.5
@@ -20,6 +23,7 @@
 - **Hooks:** Husky 9.1.7 (pre-commit)
 
 ### Backend (Server)
+
 - **Node.js:** 20+
 - **Express:** 5.2.1
 - **TypeScript:** 5.9.3
@@ -32,6 +36,7 @@
 - **Hooks:** Husky 9.1.7
 
 ### Infrastructure
+
 - **Monorepo:** npm workspaces (root + client + server)
 - **Database:** PostgreSQL 15-alpine (Docker)
 - **Admin UI:** pgAdmin 4 (Docker, port 5050)
@@ -40,63 +45,67 @@
 ## 3. Common Commands
 
 ### Root Level
-| Action | Command |
-| :--- | :--- |
-| **Install All** | `npm install` |
-| **Dev Mode (Both)** | `npm run dev` |
-| **Dev Client Only** | `npm run dev:client` |
-| **Dev Server Only** | `npm run dev:server` |
-| **Build All** | `npm run build` |
-| **Build Client** | `npm run build:client` |
-| **Build Server** | `npm run build:server` |
-| **Test All** | `npm run test` |
-| **Test Client** | `npm run test:client` |
-| **Test Server** | `npm run test:server` |
+
+| Action                  | Command                 |
+| :---------------------- | :---------------------- |
+| **Install All**         | `npm install`           |
+| **Dev Mode (Both)**     | `npm run dev`           |
+| **Dev Client Only**     | `npm run dev:client`    |
+| **Dev Server Only**     | `npm run dev:server`    |
+| **Build All**           | `npm run build`         |
+| **Build Client**        | `npm run build:client`  |
+| **Build Server**        | `npm run build:server`  |
+| **Test All**            | `npm run test`          |
+| **Test Client**         | `npm run test:client`   |
+| **Test Server**         | `npm run test:server`   |
 | **Test Coverage (All)** | `npm run test:coverage` |
-| **Lint All** | `npm run lint` |
-| **Lint Fix** | `npm run lint:fix` |
-| **Format All** | `npm run format` |
-| **Format Check** | `npm run format:check` |
-| **Clean All** | `npm run clean` |
-| **Start DB** | `npm run db:up` |
-| **Stop DB** | `npm run db:down` |
-| **DB Logs** | `npm run db:logs` |
-| **DB Migrate** | `npm run db:migrate` |
-| **DB Seed** | `npm run db:seed` |
-| **DB Studio** | `npm run db:studio` |
+| **Lint All**            | `npm run lint`          |
+| **Lint Fix**            | `npm run lint:fix`      |
+| **Format All**          | `npm run format`        |
+| **Format Check**        | `npm run format:check`  |
+| **Clean All**           | `npm run clean`         |
+| **Start DB**            | `npm run db:up`         |
+| **Stop DB**             | `npm run db:down`       |
+| **DB Logs**             | `npm run db:logs`       |
+| **DB Migrate**          | `npm run db:migrate`    |
+| **DB Seed**             | `npm run db:seed`       |
+| **DB Studio**           | `npm run db:studio`     |
 
 ### Client (`cd client` or `npm -w client`)
-| Action | Command |
-| :--- | :--- |
-| **Dev Mode** | `npm run dev` |
-| **Build Extension** | `npm run build` |
-| **Run Tests** | `npm run test` |
-| **Test UI** | `npm run test:ui` |
-| **Test Coverage** | `npm run test:coverage` |
-| **Lint** | `npm run lint` |
-| **Preview Build** | `npm run preview` |
-| **Clean** | `npm run clean` |
+
+| Action              | Command                 |
+| :------------------ | :---------------------- |
+| **Dev Mode**        | `npm run dev`           |
+| **Build Extension** | `npm run build`         |
+| **Run Tests**       | `npm run test`          |
+| **Test UI**         | `npm run test:ui`       |
+| **Test Coverage**   | `npm run test:coverage` |
+| **Lint**            | `npm run lint`          |
+| **Preview Build**   | `npm run preview`       |
+| **Clean**           | `npm run clean`         |
 
 ### Server (`cd server` or `npm -w server`)
-| Action | Command |
-| :--- | :--- |
-| **Dev Mode** | `npm run dev` |
-| **Build** | `npm run build` |
-| **Start** | `npm run start` |
-| **Run Tests** | `npm run test` |
-| **Test Watch** | `npm run test:watch` |
-| **Unit Tests Only** | `npm run test:unit` |
+
+| Action                | Command                    |
+| :-------------------- | :------------------------- |
+| **Dev Mode**          | `npm run dev`              |
+| **Build**             | `npm run build`            |
+| **Start**             | `npm run start`            |
+| **Run Tests**         | `npm run test`             |
+| **Test Watch**        | `npm run test:watch`       |
+| **Unit Tests Only**   | `npm run test:unit`        |
 | **Integration Tests** | `npm run test:integration` |
-| **Test Coverage** | `npm run test:coverage` |
-| **Lint** | `npm run lint` |
-| **Lint Fix** | `npm run lint:fix` |
-| **Migrate** | `npm run migrate` |
-| **Seed DB** | `npm run seed` |
-| **Clean** | `npm run clean` |
+| **Test Coverage**     | `npm run test:coverage`    |
+| **Lint**              | `npm run lint`             |
+| **Lint Fix**          | `npm run lint:fix`         |
+| **Migrate**           | `npm run migrate`          |
+| **Seed DB**           | `npm run seed`             |
+| **Clean**             | `npm run clean`            |
 
 ## 4. Coding Standards
 
 ### TypeScript Rules
+
 - **Strict Mode:** Enabled in both client and server
 - **noImplicitAny:** true
 - **Interfaces:** Prefer `interface` over `type` for object definitions
@@ -106,6 +115,7 @@
 - **Additional Strictness (Server):** `noUncheckedIndexedAccess: true`, `exactOptionalPropertyTypes: true`
 
 ### Extension Specifics (Frontend)
+
 - **Manifest V3:** Strictly adhere to MV3 limitations (no remote code execution)
 - **Minimal Permissions:** Only `sidePanel`, `activeTab`, `storage`, `alarms`
 - **DOM Safety:** When writing content scripts, verify elements exist before manipulating. Use optional chaining `?.` and `isValidDOMElement()` utility
@@ -115,6 +125,7 @@
 - **Security:** Input sanitization via `utils/security.ts`, client-side rate limiting (20 req/min)
 
 ### Backend Specifics
+
 - **Controller/Service Pattern:** Keep logic out of routes. Routes → Controllers → Services → Prisma
 - **Error Handling:** Use `AppError` class from `lib/errors.ts` and error middleware. Never send raw stack traces to client in production
 - **Validation:** Use Zod for all request body validation (see `validators/feedback.validator.ts`)
@@ -123,6 +134,7 @@
 - **Testing:** Mock database in tests using `__tests__/__mocks__/db.ts`
 
 ### Testing Standards
+
 - **Backend Coverage Thresholds:**
   - Branches: 75%
   - Functions: 100%
@@ -236,6 +248,7 @@
 ## 6. Database Schema
 
 ### Retailer Model
+
 ```prisma
 model Retailer {
   id             String   @id @default(uuid()) @db.Uuid
@@ -255,6 +268,7 @@ model Retailer {
 ```
 
 ### Coupon Model
+
 ```prisma
 model Coupon {
   id            String    @id @default(uuid()) @db.Uuid
@@ -279,16 +293,17 @@ model Coupon {
 
 ## 7. API Endpoints
 
-| Method | Endpoint | Description | Rate Limit |
-|--------|----------|-------------|------------|
-| GET | `/health` | Health check | None |
-| GET | `/api/v1/coupons?domain=<domain>` | Get coupons for domain | None |
-| POST | `/api/v1/coupons/:id/feedback` | Submit single feedback | 100/hour |
-| POST | `/api/v1/coupons/feedback/batch` | Submit batch feedback | 50/hour |
+| Method | Endpoint                          | Description            | Rate Limit |
+| ------ | --------------------------------- | ---------------------- | ---------- |
+| GET    | `/health`                         | Health check           | None       |
+| GET    | `/api/v1/coupons?domain=<domain>` | Get coupons for domain | None       |
+| POST   | `/api/v1/coupons/:id/feedback`    | Submit single feedback | 100/hour   |
+| POST   | `/api/v1/coupons/feedback/batch`  | Submit batch feedback  | 50/hour    |
 
 ## 8. Environment Variables
 
 ### Root `.env`
+
 ```bash
 POSTGRES_USER=admin
 POSTGRES_PASSWORD=root
@@ -298,12 +313,14 @@ PGADMIN_DEFAULT_PASSWORD=admin
 ```
 
 ### Client `.env` (`client/.env`)
+
 ```bash
 VITE_API_BASE_URL=http://localhost:3030/api/v1
 VITE_ENV=development
 ```
 
 ### Server `.env` (`server/.env`)
+
 ```bash
 DATABASE_URL="postgresql://admin:root@localhost:5432/opencoupon_db"
 PORT=3030
@@ -313,6 +330,7 @@ NODE_ENV=development
 ## 9. Key Implementation Files
 
 ### Content Script Engine (Auto-Apply Logic)
+
 - `client/src/content/detector.ts` (14,950 bytes) - Multi-strategy coupon field detection
 - `client/src/content/applier.ts` (23,520 bytes) - Auto-apply loop with price monitoring
 - `client/src/content/AutoApplyManager.tsx` (8,297 bytes) - Orchestration layer
@@ -321,6 +339,7 @@ NODE_ENV=development
 - `client/src/content/components/AutoApplyResult.tsx` (7,652 bytes) - Results modal
 
 ### Security & Utilities
+
 - `client/src/utils/security.ts` - DOM validation, message sender validation, input sanitization
 - `client/src/utils/rateLimiter.ts` - Client-side rate limiting (20 req/min)
 - `client/src/utils/feedbackQueue.ts` - Feedback batching and queueing
@@ -340,12 +359,14 @@ NODE_ENV=development
 ## 11. Testing Best Practices
 
 ### Frontend (Vitest)
+
 - Place tests next to implementation files (e.g., `CouponCard.test.tsx`)
 - Use test utilities from `client/src/test/testUtils.tsx`
 - Mock Chrome APIs as needed
 - Test UI components, API clients, and content script logic
 
 ### Backend (Jest)
+
 - Unit tests in `__tests__/services/` and `__tests__/lib/`
 - Integration tests in `__tests__/integration/`
 - Mock Prisma client using `__tests__/__mocks__/db.ts`

@@ -128,7 +128,7 @@ describe('CouponService', () => {
 
       await expect(getCouponsByDomain('nonexistent.com')).rejects.toThrow(NotFoundError);
       await expect(getCouponsByDomain('nonexistent.com')).rejects.toThrow(
-        'No retailer found for domain: nonexistent.com'
+        'No retailer found for domain: nonexistent.com',
       );
     });
 
@@ -137,9 +137,7 @@ describe('CouponService', () => {
       mockDb.retailer.findUnique.mockResolvedValue(inactiveRetailer);
 
       await expect(getCouponsByDomain('nike.com')).rejects.toThrow(NotFoundError);
-      await expect(getCouponsByDomain('nike.com')).rejects.toThrow(
-        'Retailer is not active: nike.com'
-      );
+      await expect(getCouponsByDomain('nike.com')).rejects.toThrow('Retailer is not active: nike.com');
     });
 
     it('should return empty array when retailer has no coupons', async () => {
