@@ -103,22 +103,27 @@ Get up and running in 5 simple steps using our monorepo setup:
    npm install    # Installs all dependencies for client + server
    ```
 
-2. **Set up the database**
+2. **Configure environment**
+
+   ```bash
+   # Client configuration
+   cp client/.env.example client/.env
+
+   # Server configuration
+   cp server/.env.example server/.env
+   ```
+
+   Both files come with sensible defaults for local development. Edit them if you need to customize:
+   - Database connection string
+   - API URLs
+   - Server port
+
+3. **Set up the database**
 
    ```bash
    npm run db:up       # Start PostgreSQL in Docker
    npm run db:migrate  # Run database migrations
    npm run db:seed     # Populate with sample coupon data
-   ```
-
-3. **Configure environment** (optional - defaults work for development)
-
-   ```bash
-   # Client config (optional)
-   cp client/.env.example client/.env
-
-   # Server config (optional)
-   cp server/.env.example server/.env
    ```
 
 4. **Start development servers**
