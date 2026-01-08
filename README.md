@@ -93,36 +93,41 @@ OpenCoupon is an **open-source, ethical framework** for building browser extensi
 
 ### Installation
 
-1. **Clone the repository**
+Get up and running in 5 simple steps using our monorepo setup:
+
+1. **Clone and install**
 
    ```bash
    git clone https://github.com/EvgeniiKlepilin/open-coupon.git
    cd open-coupon
+   npm install    # Installs all dependencies for client + server
    ```
 
-2. **Start the database** (PostgreSQL in Docker)
+2. **Set up the database**
 
    ```bash
-   docker compose up -d
+   npm run db:up       # Start PostgreSQL in Docker
+   npm run db:migrate  # Run database migrations
+   npm run db:seed     # Populate with sample coupon data
    ```
 
-3. **Set up the backend**
+3. **Configure environment** (optional - defaults work for development)
 
    ```bash
-   cd server
-   npm install
-   npm run seed    # Seed database with sample data
-   npm run dev     # Start development server
+   # Client config (optional)
+   cp client/.env.example client/.env
+
+   # Server config (optional)
+   cp server/.env.example server/.env
    ```
 
-4. **Set up the frontend** (in a new terminal)
+4. **Start development servers**
 
    ```bash
-   cd client
-   npm install
-   cp .env.example .env    # Create environment config
-   npm run dev             # Start development build
+   npm run dev    # Starts both client and server simultaneously
    ```
+
+   The backend API will run on `http://localhost:3030` and the extension will build to `client/dist/`
 
 5. **Load the extension in Chrome**
    - Open Chrome and navigate to `chrome://extensions/`
@@ -132,11 +137,24 @@ OpenCoupon is an **open-source, ethical framework** for building browser extensi
    - The extension icon should appear in your toolbar!
 
 6. **Test it out**
-   - Seed the database with coupons for specific domains
-   - Visit any e-commerce sites for which you have created coupons
-   - Navigate to checkout
-   - Click the OpenCoupon extension icon and Auto-Apply button
-   - Watch it find and test coupons automatically! 🎉
+   - Visit any e-commerce site included in the seed data (e.g., amazon.com, ebay.com)
+   - Navigate to a checkout page
+   - Click the OpenCoupon extension icon and hit the "Auto-Apply" button
+   - Watch it automatically find and test coupons! 🎉
+
+### Quick Commands Reference
+
+```bash
+npm run dev          # Start both client & server
+npm run db:up        # Start database
+npm run db:down      # Stop database
+npm run db:seed      # Reseed database
+npm test             # Run all tests (190 tests)
+npm run lint         # Lint all code
+npm run format       # Format all code
+```
+
+See [Common Commands](#common-commands) for the full list.
 
 ---
 
