@@ -100,8 +100,10 @@ Get up and running in 5 simple steps using our monorepo setup:
    ```bash
    git clone https://github.com/EvgeniiKlepilin/open-coupon.git
    cd open-coupon
-   npm install    # Installs all dependencies for client + server
+   npm install    # Installs all dependencies and generates Prisma client
    ```
+
+   > **Note:** The Prisma database client is automatically generated during installation via a postinstall hook.
 
 2. **Configure environment**
 
