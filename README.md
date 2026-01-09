@@ -438,10 +438,12 @@ npm run test:ui          # Interactive test UI
 npm run lint             # Check code style
 
 # Database
-docker compose up -d     # Start PostgreSQL
-docker compose down      # Stop database
-npx prisma studio        # Open database GUI
-npx prisma migrate dev   # Run migrations
+
+npm run db:up        	# Start database
+npm run db:down      	# Stop database
+npm run db:seed      	# Reseed database
+npm run db:studio    	# Open database GUI
+npm run db:migrate   	# Run migrations
 ```
 
 ### Environment Configuration
@@ -529,16 +531,16 @@ We welcome contributions from the community! Whether you're fixing bugs, adding 
 
 ### Quick Contribution Checklist
 
-✅ Fork and clone the repository
-✅ Create a feature branch
-✅ Follow TypeScript and code style guidelines (ESLint 9 + Prettier 3.7)
-✅ Add tests for new features (maintain >75% coverage)
-✅ Ensure all 190 tests pass (`npm test`)
-✅ Verify linting passes with zero warnings (`npm run lint`)
-✅ Check formatting (`npm run format:check`)
-✅ Write clear commit messages (Conventional Commits)
-✅ Ensure CI/CD pipeline passes
-✅ Align with our [ethical guidelines](#️-ethical-considerations)
+- ✅ Fork and clone the repository
+- ✅ Create a feature branch
+- ✅ Follow TypeScript and code style guidelines (ESLint 9 + Prettier 3.7)
+- ✅ Add tests for new features (maintain >75% coverage)
+- ✅ Ensure all 190 tests pass (`npm test`)
+- ✅ Verify linting passes with zero warnings (`npm run lint`)
+- ✅ Check formatting (`npm run format:check`)
+- ✅ Write clear commit messages (Conventional Commits)
+- ✅ Ensure CI/CD pipeline passes
+- ✅ Align with our [ethical guidelines](#️-ethical-considerations)
 
 ### Areas We'd Love Help With
 
