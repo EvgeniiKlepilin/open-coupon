@@ -23,16 +23,12 @@ jobs:
 
       - name: Install dependencies
         run: npm install
+        env:
+          DATABASE_URL: postgresql://user:password@localhost:5432/db
 
       - name: Install Rollup native bindings
         run: npm install @rollup/rollup-linux-x64-gnu --save-optional
         working-directory: ./client
-
-      - name: Generate Prisma Client
-        run: npx prisma generate
-        working-directory: ./server
-        env:
-          DATABASE_URL: postgresql://user:password@localhost:5432/db
 
       - name: Build all packages
         run: npm run build
