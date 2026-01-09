@@ -95,19 +95,12 @@ OpenCoupon is an **open-source, ethical framework** for building browser extensi
 
 Get up and running in 5 simple steps using our monorepo setup:
 
-1. **Clone and install**
+1. **Clone and configure**
 
    ```bash
    git clone https://github.com/EvgeniiKlepilin/open-coupon.git
    cd open-coupon
-   npm install    # Installs all dependencies and generates Prisma client
-   ```
 
-   > **Note:** The Prisma database client is automatically generated during installation via a postinstall hook.
-
-2. **Configure environment**
-
-   ```bash
    # Client configuration
    cp client/.env.example client/.env
 
@@ -115,10 +108,13 @@ Get up and running in 5 simple steps using our monorepo setup:
    cp server/.env.example server/.env
    ```
 
-   Both files come with sensible defaults for local development. Edit them if you need to customize:
-   - Database connection string
-   - API URLs
-   - Server port
+2. **Install dependencies**
+
+   ```bash
+   npm install    # Installs all dependencies and generates Prisma client
+   ```
+
+   > **Note:** The Prisma database client is automatically generated during installation via a postinstall hook.
 
 3. **Set up the database**
 
@@ -144,7 +140,7 @@ Get up and running in 5 simple steps using our monorepo setup:
    - The extension icon should appear in your toolbar!
 
 6. **Test it out**
-   - Visit any e-commerce site included in the seed data (e.g., amazon.com, ebay.com)
+   - Visit any e-commerce site included in the seed data (e.g., amazon.com, nike.com)
    - Navigate to a checkout page
    - Click the OpenCoupon extension icon and hit the "Auto-Apply" button
    - Watch it automatically find and test coupons! 🎉
