@@ -428,7 +428,21 @@ Submit feedback for multiple coupons in a single request (efficient for auto-app
 
 ### Installation
 
-**Recommended: Install from root** (installs both client and server):
+**Configure environment**:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env`:
+
+```bash
+DATABASE_URL="postgresql://user:password@localhost:5432/opencoupon?schema=public"
+PORT=3030
+NODE_ENV=development
+```
+
+**Install from root** (installs both client and server):
 
 ```bash
 # From project root
@@ -446,21 +460,7 @@ npm install
 
 ```bash
 # From project root
-docker compose up -d
-```
-
-**Configure environment**:
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env`:
-
-```bash
-DATABASE_URL="postgresql://user:password@localhost:5432/opencoupon?schema=public"
-PORT=3030
-NODE_ENV=development
+npm run db:up
 ```
 
 **Run database migrations**:
@@ -642,21 +642,6 @@ Current coverage: **>85%** with strict thresholds enforced:
 
 ## CI/CD Pipeline
 
-The server is part of the automated CI/CD pipeline using **GitHub Actions**:
-
-**Automated Checks on Every Push/PR:**
-
-- ✅ Dependency installation with npm cache
-- ✅ Prisma client generation
-- ✅ Build verification
-- ✅ Unit test suite execution (58 tests)
-- ✅ Code linting (ESLint 9, zero warnings enforced)
-- ✅ Code formatting validation (Prettier 3.7)
-
-**Workflow File:** `.github/workflows/ci.yml`
-
-**Note:** CI runs unit tests only (not integration tests) to keep build time short while maintaining core coverage.
-
 All checks must pass before PRs can be merged. See [main README](../README.md) for full CI/CD details.
 
 ## Database Management
@@ -713,7 +698,7 @@ Seeds:
 2. **Install dependencies**
 
    ```bash
-   npm ci --only=production
+   npm install --only=production
    ```
 
 3. **Generate Prisma Client**
@@ -849,45 +834,5 @@ Returns:
 ```
 
 **Production Recommendation:** Enhance health check to include database connectivity test.
-
-## Contributing
-
-We welcome backend contributions!
-
-**Before contributing, please read the [Contributing Guidelines](../CONTRIBUTING.md)** for detailed information on:
-
-- Development setup and workflow
-- Coding standards (TypeScript strict mode, ESLint 9 + Prettier 3.7)
-- Testing requirements (maintain 58 tests, >85% coverage)
-- Commit message conventions
-- Pull request process
-- CI/CD pipeline requirements
-
-### Quick Contribution Checklist
-
-✅ Follow TypeScript strict mode and async/await patterns
-✅ Add tests for new features (Jest + Supertest)
-✅ Maintain coverage thresholds (75% branches, 100% functions, 90% lines)
-✅ Run `npm run format` before committing
-✅ Ensure all tests pass (`npm test` - 58 tests)
-✅ Verify linting passes with zero warnings (`npm run lint`)
-✅ Use Conventional Commits format
-✅ Ensure CI pipeline passes
-
-### Priority Areas
-
-- **API Endpoints**: Add endpoints for creating/deleting coupons, managing retailers
-- **Database Schema**: Add fields for coupon categories, user submissions
-- **Performance**: Optimize database queries, add caching layer (Redis)
-- **Testing**: Increase test coverage, add E2E tests
-- **Documentation**: API documentation with OpenAPI/Swagger
-
-**See [CONTRIBUTING.md](../CONTRIBUTING.md) for complete guidelines.**
-
-## License
-
-MIT License - see [../LICENSE](../LICENSE) for details.
-
----
 
 **Need Help?** Check the [main README](../README.md) or open an issue on GitHub.

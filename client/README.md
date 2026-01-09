@@ -394,18 +394,6 @@ npm run test:ui
 
 ## CI/CD Pipeline
 
-The client is part of the automated CI/CD pipeline using **GitHub Actions**:
-
-**Automated Checks on Every Push/PR:**
-
-- ✅ Dependency installation with npm cache
-- ✅ Build verification
-- ✅ Test suite execution (132 tests)
-- ✅ Code linting (ESLint 9, zero warnings enforced)
-- ✅ Code formatting validation (Prettier 3.7)
-
-**Workflow File:** `.github/workflows/ci.yml`
-
 All checks must pass before PRs can be merged. See [main README](../README.md) for full CI/CD details.
 
 ## Deployment
@@ -515,43 +503,5 @@ console.log('[OpenCoupon] Starting auto-apply with', coupons.length, 'coupons');
 **Issue**: Coupon field not detected
 
 - **Fix**: Open DevTools → Console. Look for `[Detector]` logs. Inspect page HTML to identify field selectors.
-
-## Contributing
-
-We welcome contributions to improve the Chrome Extension!
-
-**Before contributing, please read the [Contributing Guidelines](../CONTRIBUTING.md)** for detailed information on:
-
-- Development setup and workflow
-- Coding standards (TypeScript strict mode, ESLint 9 + Prettier 3.7)
-- Testing requirements (maintain 132 tests)
-- Commit message conventions
-- Pull request process
-- CI/CD pipeline requirements
-
-### Quick Contribution Checklist
-
-✅ Follow TypeScript strict mode and React best practices
-✅ Add tests for new features (Vitest + React Testing Library)
-✅ Run `npm run format` before committing
-✅ Ensure all tests pass (`npm test` - 132 tests)
-✅ Verify linting passes with zero warnings (`npm run lint`)
-✅ Use Conventional Commits format
-✅ Ensure CI pipeline passes
-
-### Priority Areas
-
-- **UI/UX Improvements**: Enhance popup and overlay components
-- **Advanced Coupon Field Detection**: Improve detection algorithms
-- **Testing**: Add test coverage for edge cases
-- **Documentation**: Improve inline comments and guides
-
-**See [CONTRIBUTING.md](../CONTRIBUTING.md) for complete guidelines.**
-
-## License
-
-MIT License - see [../LICENSE](../LICENSE) for details.
-
----
 
 **Need Help?** Check the [main README](../README.md) or open an issue on GitHub.
